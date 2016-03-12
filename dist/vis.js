@@ -10754,12 +10754,6 @@ return /******/ (function(modules) { // webpackBootstrap
     this.dom.root.oncontextmenu = function (event) {
       me.emit('contextmenu', me.getEventProperties(event));
     };
-    this.on('mouseover', function (event) {
-      me.emit('mouseover', me.getEventProperties(event));
-    });
-    this.on('mouseout', function (event) {
-      me.emit('mouseout', me.getEventProperties(event));
-    });
 
     //Single time autoscale/fit
     this.fitDone = false;
@@ -17234,7 +17228,7 @@ return /******/ (function(modules) { // webpackBootstrap
     this.hammer.get('pan').set({ threshold: 5, direction: Hammer.DIRECTION_HORIZONTAL });
     this.listeners = {};
 
-    var events = ['tap', 'doubletap', 'press', 'pinch', 'pan', 'panstart', 'panmove', 'panend', 'mouseover', 'mouseout'
+    var events = ['tap', 'doubletap', 'press', 'pinch', 'pan', 'panstart', 'panmove', 'panend'
     // TODO: cleanup
     //'touch', 'pinch',
     //'tap', 'doubletap', 'hold',
@@ -19020,6 +19014,12 @@ return /******/ (function(modules) { // webpackBootstrap
             this.selection.push(id);
             item.select();
           }
+          item.on("mouseover", function (item) {
+            me.body.emitter.emit('mouseover', item);
+          });
+          item.on("mouseout", function (item) {
+            me.body.emitter.emit('mouseout', item);
+          });
         } else if (type == 'rangeoverflow') {
           // TODO: deprecated since version 2.1.0 (or 3.0.0?). cleanup some day
           throw new TypeError('Item type "rangeoverflow" is deprecated. Use css styling instead: ' + '.vis-item.vis-range .vis-item-content {overflow: visible;}');
@@ -21519,6 +21519,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
   var Hammer = __webpack_require__(22);
   var Item = __webpack_require__(36);
+  var Emitter = __webpack_require__(12);
 
   /**
    * @constructor RangeItem
@@ -21548,10 +21549,25 @@ return /******/ (function(modules) { // webpackBootstrap
       }
     }
 
+    var me = this;
+
+    //mouseover callback method
+    this.mouseoverCallback = function (event) {
+      me.emit('mouseover', data);
+    };
+
+    //mouseover callback method
+    this.mouseoutCallback = function (event) {
+      me.emit('mouseout', data);
+    };
+
     Item.call(this, data, conversion, options);
   }
 
   RangeItem.prototype = new Item(null, null, null);
+
+  // Extend RangeItem with an Emitter mixin
+  Emitter(RangeItem.prototype);
 
   RangeItem.prototype.baseClassName = 'vis-item vis-range';
 
@@ -21588,6 +21604,8 @@ return /******/ (function(modules) { // webpackBootstrap
       dom.content = document.createElement('div');
       dom.content.className = 'vis-item-content';
       dom.frame.appendChild(dom.content);
+      dom.frame.addEventListener("mouseover", this.mouseoverCallback);
+      dom.frame.addEventListener("mouseout", this.mouseoutCallback);
 
       // attach this item as attribute
       dom.box['timeline-item'] = this;
@@ -21815,6 +21833,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
   var Hammer = __webpack_require__(22);
   var util = __webpack_require__(1);
+  var Emitter = __webpack_require__(12);
 
   /**
    * @constructor Item
@@ -21847,6 +21866,9 @@ return /******/ (function(modules) { // webpackBootstrap
       this.editable = data.editable;
     }
   }
+
+  // Extend RangeItem with an Emitter mixin
+  Emitter(Item.prototype);
 
   Item.prototype.stack = true;
 
@@ -22210,6 +22232,17 @@ return /******/ (function(modules) { // webpackBootstrap
       }
     }
 
+    var me = this;
+    //mouseover callback method
+    this.mouseoverCallback = function (event) {
+      me.emit('mouseover', data);
+    };
+
+    //mouseover callback method
+    this.mouseoutCallback = function (event) {
+      me.emit('mouseout', data);
+    };
+
     Item.call(this, data, conversion, options);
   }
 
@@ -22239,6 +22272,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
       // create main box
       dom.box = document.createElement('DIV');
+      dom.box.addEventListener("mouseover", this.mouseoverCallback);
+      dom.box.addEventListener("mouseout", this.mouseoutCallback);
 
       // contents box (inside the background box). used for making margins
       dom.content = document.createElement('DIV');
@@ -22455,6 +22490,17 @@ return /******/ (function(modules) { // webpackBootstrap
       }
     }
 
+    var me = this;
+    //mouseover callback method
+    this.mouseoverCallback = function (event) {
+      me.emit('mouseover', data);
+    };
+
+    //mouseover callback method
+    this.mouseoutCallback = function (event) {
+      me.emit('mouseout', data);
+    };
+
     Item.call(this, data, conversion, options);
   }
 
@@ -22484,6 +22530,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
       // background box
       dom.point = document.createElement('div');
+      dom.point.addEventListener("mouseover", this.mouseoverCallback);
+      dom.point.addEventListener("mouseout", this.mouseoutCallback);
       // className is updated in redraw()
 
       // contents box, right from the dot
@@ -23361,7 +23409,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
     // block all touch events (except tap)
     var me = this;
-    var events = ['tap', 'doubletap', 'press', 'pinch', 'pan', 'panstart', 'panmove', 'panend', 'mouseover', 'mouseout'];
+    var events = ['tap', 'doubletap', 'press', 'pinch', 'pan', 'panstart', 'panmove', 'panend'];
     events.forEach(function (event) {
       me.hammer.on(event, function (event) {
         event.stopPropagation();
