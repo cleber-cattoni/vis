@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.1
- * @date    2016-03-08
+ * @date    2016-03-12
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -10754,6 +10754,12 @@ return /******/ (function(modules) { // webpackBootstrap
     this.dom.root.oncontextmenu = function (event) {
       me.emit('contextmenu', me.getEventProperties(event));
     };
+    this.on('mouseover', function (event) {
+      me.emit('mouseover', me.getEventProperties(event));
+    });
+    this.on('mouseout', function (event) {
+      me.emit('mouseout', me.getEventProperties(event));
+    });
 
     //Single time autoscale/fit
     this.fitDone = false;
@@ -15804,9 +15810,9 @@ return /******/ (function(modules) { // webpackBootstrap
       // http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#JavaScript
       /*
        Copyright (c) 2011 Andrei Mackenzie
-        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-        The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+         Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+         The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
        */
 
     }, {
@@ -17228,7 +17234,7 @@ return /******/ (function(modules) { // webpackBootstrap
     this.hammer.get('pan').set({ threshold: 5, direction: Hammer.DIRECTION_HORIZONTAL });
     this.listeners = {};
 
-    var events = ['tap', 'doubletap', 'press', 'pinch', 'pan', 'panstart', 'panmove', 'panend'
+    var events = ['tap', 'doubletap', 'press', 'pinch', 'pan', 'panstart', 'panmove', 'panend', 'mouseover', 'mouseout'
     // TODO: cleanup
     //'touch', 'pinch',
     //'tap', 'doubletap', 'hold',
@@ -23355,7 +23361,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
     // block all touch events (except tap)
     var me = this;
-    var events = ['tap', 'doubletap', 'press', 'pinch', 'pan', 'panstart', 'panmove', 'panend'];
+    var events = ['tap', 'doubletap', 'press', 'pinch', 'pan', 'panstart', 'panmove', 'panend', 'mouseover', 'mouseout'];
     events.forEach(function (event) {
       me.hammer.on(event, function (event) {
         event.stopPropagation();
