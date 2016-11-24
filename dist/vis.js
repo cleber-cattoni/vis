@@ -4,8 +4,8 @@
  *
  * A dynamic, browser-based visualization library.
  *
- * @version 4.15.2
- * @date    2016-11-18
+ * @version 4.15.3
+ * @date    2016-11-24
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -6275,17 +6275,36 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   exports.drawPoint = function (x, y, groupTemplate, JSONcontainer, svgContainer, labelObj) {
     var point;
-    if (groupTemplate.style == 'circle') {
-      point = exports.getSVGElement('circle', JSONcontainer, svgContainer);
-      point.setAttributeNS(null, "cx", x);
-      point.setAttributeNS(null, "cy", y);
-      point.setAttributeNS(null, "r", 0.5 * groupTemplate.size);
-    } else {
-      point = exports.getSVGElement('rect', JSONcontainer, svgContainer);
-      point.setAttributeNS(null, "x", x - 0.5 * groupTemplate.size);
-      point.setAttributeNS(null, "y", y - 0.5 * groupTemplate.size);
-      point.setAttributeNS(null, "width", groupTemplate.size);
-      point.setAttributeNS(null, "height", groupTemplate.size);
+    var v = { x: x - 0.5 * groupTemplate.size, y: y - 0.5 * groupTemplate.size };
+    switch (groupTemplate.style) {
+      case 'circle':
+        point = exports.getSVGElement('circle', JSONcontainer, svgContainer);
+        point.setAttributeNS(null, "cx", x);
+        point.setAttributeNS(null, "cy", y);
+        point.setAttributeNS(null, "r", 0.5 * groupTemplate.size);
+        break;
+      case 'square':
+        point = exports.getSVGElement('rect', JSONcontainer, svgContainer);
+        point.setAttributeNS(null, "x", x - 0.5 * groupTemplate.size);
+        point.setAttributeNS(null, "y", y - 0.5 * groupTemplate.size);
+        point.setAttributeNS(null, "width", groupTemplate.size);
+        point.setAttributeNS(null, "height", groupTemplate.size);
+        break;
+      case 'triangle-up':
+        point = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
+        point.setAttributeNS(null, "points", v.x + ',' + (v.y + groupTemplate.size) + ' ' + (v.x + groupTemplate.size) + ',' + (v.y + groupTemplate.size) + ' ' + (v.x + groupTemplate.size * 0.5) + ',' + v.y);
+        break;
+      case 'triangle-down':
+        point = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
+        point.setAttributeNS(null, "points", v.x + ',' + v.y + ' ' + (v.x + groupTemplate.size) + ',' + v.y + ' ' + (v.x + groupTemplate.size * 0.5) + ',' + (v.y + groupTemplate.size));
+        break;
+      case 'rectangle':
+        point = exports.getSVGElement('rect', JSONcontainer, svgContainer);
+        point.setAttributeNS(null, "x", x - 0.5 * groupTemplate.width);
+        point.setAttributeNS(null, "y", y - 0.5 * groupTemplate.height);
+        point.setAttributeNS(null, "width", groupTemplate.width);
+        point.setAttributeNS(null, "height", groupTemplate.height);
+        break;
     }
 
     if (groupTemplate.styles !== undefined) {
@@ -27779,6 +27798,8 @@ return /******/ (function(modules) { // webpackBootstrap
       style: callbackResult.style || group.options.drawPoints.style,
       styles: callbackResult.styles || group.options.drawPoints.styles,
       size: callbackResult.size || group.options.drawPoints.size,
+      height: callbackResult.height || group.options.drawPoints.height,
+      width: callbackResult.width || group.options.drawPoints.width,
       className: callbackResult.className || group.className
     };
   }
