@@ -4,8 +4,8 @@
  *
  * A dynamic, browser-based visualization library.
  *
- * @version 4.15.3
- * @date    2016-11-24
+ * @version 4.15.4
+ * @date    2016-11-28
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -27516,6 +27516,8 @@ return /******/ (function(modules) { // webpackBootstrap
         style: group.options.drawPoints.style,
         styles: group.options.drawPoints.styles,
         size: group.options.drawPoints.size / scale,
+        width: group.options.drawPoints.width,
+        height: group.options.drawPoints.height,
         className: group.className
       };
       DOMutil.drawPoint(x + 0.5 * barWidth + offset, y + fillHeight - bar1Height - 1, groupTemplate, framework.svgElements, framework.svg);
@@ -27882,6 +27884,8 @@ return /******/ (function(modules) { // webpackBootstrap
               style: group.options.drawPoints.style,
               styles: group.options.drawPoints.styles,
               size: group.options.drawPoints.size,
+              height: group.options.drawPoints.height,
+              width: group.options.drawPoints.width,
               className: group.className
           };
           DOMutil.drawPoint(x + 0.5 * iconWidth, y, groupTemplate, framework.svgElements, framework.svg);
