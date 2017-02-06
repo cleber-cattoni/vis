@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2016-11-28
+ * @date    2017-02-06
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -1585,7 +1585,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
   /* WEBPACK VAR INJECTION */(function(module) {//! moment.js
-  //! version : 2.16.0
+  //! version : 2.17.1
   //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
   //! license : MIT
   //! momentjs.com
@@ -1628,7 +1628,7 @@ return /******/ (function(modules) { // webpackBootstrap
   }
 
   function isNumber(input) {
-      return typeof value === 'number' || Object.prototype.toString.call(input) === '[object Number]';
+      return typeof input === 'number' || Object.prototype.toString.call(input) === '[object Number]';
   }
 
   function isDate(input) {
@@ -1820,6 +1820,9 @@ return /******/ (function(modules) { // webpackBootstrap
   function Moment(config) {
       copyConfig(this, config);
       this._d = new Date(config._d != null ? config._d.getTime() : NaN);
+      if (!this.isValid()) {
+          this._d = new Date(NaN);
+      }
       // Prevent infinite loop in case updateOffset creates new moment
       // objects.
       if (updateInProgress === false) {
@@ -5847,7 +5850,7 @@ return /******/ (function(modules) { // webpackBootstrap
   // Side effect imports
 
 
-  hooks.version = '2.16.0';
+  hooks.version = '2.17.1';
 
   setHookCallback(createLocal);
 
@@ -21749,6 +21752,9 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   Group.prototype._calculateHeight = function (margin) {
+    if (angular.isDefined(this.dbpanelRowHeight)) {
+      return this.dbpanelRowHeight;
+    };
     // recalculate the height of the group
     var height;
     var visibleItems = this.visibleItems;
