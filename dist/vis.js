@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2017-02-06
+ * @date    2017-02-07
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -21752,8 +21752,9 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   Group.prototype._calculateHeight = function (margin) {
-    if (angular.isDefined(this.dbpanelRowHeight)) {
-      return this.dbpanelRowHeight;
+    var groupTl = angular.element(this.dom.foreground).scope().timeline;
+    if (angular.isDefined(groupTl.rowHeights) && angular.isDefined(groupTl.rowHeights[this.className])) {
+      return groupTl.rowHeights[this.className];
     };
     // recalculate the height of the group
     var height;
