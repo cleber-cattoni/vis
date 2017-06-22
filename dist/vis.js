@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2017-02-07
+ * @date    2017-06-22
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -27192,7 +27192,7 @@ return /******/ (function(modules) { // webpackBootstrap
   DataScale.prototype.formatValue = function (current) {
     var returnValue = current.toPrecision(5);
     if (typeof this.formattingFunction === 'function') {
-      returnValue = this.formattingFunction(current);
+      returnValue = this.formattingFunction(current, true);
     }
 
     if (typeof returnValue === 'number') {
