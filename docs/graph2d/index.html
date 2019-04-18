@@ -471,6 +471,32 @@ var options = {
             <td>Toggle the drawing of automatically generated icons the Y axis.</td>
         </tr>
         <tr parent="dataAxis" class="hidden">
+            <td class="indent2">dataAxis.data.values</td>
+            <td>Array</td>
+            <td>false</td>
+            <td>Define the values that will be used in Y axis. Example:
+                <pre class="prettyprint lang-js">
+dataAxis: {
+	data: {
+		values: [10, 12, 14, 16, 18],
+	}
+}</pre>
+            </td>
+        </tr>
+        <tr parent="dataAxis" class="hidden">
+            <td class="indent2">dataAxis.data.labels</td>
+            <td>Array</td>
+            <td>false</td>
+            <td>Define the labels that will be used in Y axis. Example:
+                <pre class="prettyprint lang-js">
+dataAxis: {
+	data: {
+		labels: ['Test 10', 'Test 12', 'Test 14', 'Test 16', 'Test 18']
+	}
+}</pre>
+            </td>
+        </tr>
+        <tr parent="dataAxis" class="hidden">
             <td class="indent2">dataAxis.left.format</td>
             <td>Function</td>
             <td></td>
