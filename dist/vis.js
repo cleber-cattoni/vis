@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2020-08-26
+ * @date    2020-09-16
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -7641,46 +7641,94 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param JSONcontainer
    * @param svgContainer
    * @param labelObj
+   * @param props: Be going to considered to draw the points
    * @returns {*}
    */
-  exports.drawPoint = function (x, y, groupTemplate, JSONcontainer, svgContainer, labelObj) {
-    var point;
+  exports.drawPoint = function (x, y, groupTemplate, JSONcontainer, svgContainer, labelObj, props) {
+    var points = [];
     var v = { x: x - 0.5 * groupTemplate.size, y: y - 0.5 * groupTemplate.size };
     switch (groupTemplate.style) {
       case 'circle':
-        point = exports.getSVGElement('circle', JSONcontainer, svgContainer);
-        point.setAttributeNS(null, "cx", x);
-        point.setAttributeNS(null, "cy", y);
-        point.setAttributeNS(null, "r", 0.5 * groupTemplate.size);
+        var circle = exports.getSVGElement('circle', JSONcontainer, svgContainer);
+        circle.setAttributeNS(null, "cx", x);
+        circle.setAttributeNS(null, "cy", y);
+        circle.setAttributeNS(null, "r", 0.5 * groupTemplate.size);
+        points.push(circle);
         break;
       case 'square':
-        point = exports.getSVGElement('rect', JSONcontainer, svgContainer);
-        point.setAttributeNS(null, "x", x - 0.5 * groupTemplate.size);
-        point.setAttributeNS(null, "y", y - 0.5 * groupTemplate.size);
-        point.setAttributeNS(null, "width", groupTemplate.size);
-        point.setAttributeNS(null, "height", groupTemplate.size);
+        var rect = exports.getSVGElement('rect', JSONcontainer, svgContainer);
+        rect.setAttributeNS(null, "x", x - 0.5 * groupTemplate.size);
+        rect.setAttributeNS(null, "y", y - 0.5 * groupTemplate.size);
+        rect.setAttributeNS(null, "width", groupTemplate.size);
+        rect.setAttributeNS(null, "height", groupTemplate.size);
+        points.push(rect);
         break;
       case 'triangle-up':
-        point = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
-        point.setAttributeNS(null, "points", v.x + ',' + (v.y + groupTemplate.size) + ' ' + (v.x + groupTemplate.size) + ',' + (v.y + groupTemplate.size) + ' ' + (v.x + groupTemplate.size * 0.5) + ',' + v.y);
+        var polygonup = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
+        polygonup.setAttributeNS(null, "points", v.x + ',' + (v.y + groupTemplate.size) + ' ' + (v.x + groupTemplate.size) + ',' + (v.y + groupTemplate.size) + ' ' + (v.x + groupTemplate.size * 0.5) + ',' + v.y);
+        points.push(polygonup);
         break;
       case 'triangle-down':
-        point = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
-        point.setAttributeNS(null, "points", v.x + ',' + v.y + ' ' + (v.x + groupTemplate.size) + ',' + v.y + ' ' + (v.x + groupTemplate.size * 0.5) + ',' + (v.y + groupTemplate.size));
+        var polygondown = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
+        polygondown.setAttributeNS(null, "points", v.x + ',' + v.y + ' ' + (v.x + groupTemplate.size) + ',' + v.y + ' ' + (v.x + groupTemplate.size * 0.5) + ',' + (v.y + groupTemplate.size));
+        points.push(polygondown);
+        break;
+      case 'arrow-avg':
+
+        var average = 0;
+
+        if (props) {
+          average = props.max - props.min;
+        }
+
+        var minLineHeight = 0;
+        var minOffset = 5;
+        var lineHeight = minLineHeight + average;
+        var xOffset = 1; // This make the arrow more large.
+        var yOffset = minLineHeight * 2 + average + minOffset;
+
+        var tLeftPoint = v.x - xOffset + ',' + (v.y - yOffset);
+        var tRightPoint = v.x + groupTemplate.size + xOffset + ',' + (v.y - yOffset);
+        var tBottomPoint = v.x + groupTemplate.size * 0.5 + ',' + (v.y - (2 + yOffset) + groupTemplate.size);
+        var tLinePoint = v.x + groupTemplate.size * 0.5 + ',' + (v.y - (2 + yOffset) + lineHeight + groupTemplate.size);
+
+        var bLeftPoint = v.x - xOffset + ',' + (v.y + yOffset + groupTemplate.size);
+        var bRightPoint = v.x + groupTemplate.size + xOffset + ',' + (v.y + yOffset + groupTemplate.size);
+        var bTopPoint = v.x + groupTemplate.size * 0.5 + ',' + (v.y + (2 + yOffset));
+        var bLinePoint = v.x + groupTemplate.size * 0.5 + ',' + (v.y + (2 + yOffset) - lineHeight);
+
+        var polygonavg1 = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
+        polygonavg1.setAttributeNS(null, 'points', tLeftPoint + ' ' + tBottomPoint + ' ' + tLinePoint + ' ' + tBottomPoint + ' ' + tRightPoint);
+        var crossSize = 6;
+        var initialX = v.x;
+        var initialY = v.y;
+        var verticalX = initialX + crossSize / 2;
+        var verticalY = initialY + crossSize;
+        var horizontalY = initialY + crossSize / 2;
+        var horizontalX = initialX + crossSize;
+
+        var verticalLine = 'M ' + verticalX + ',' + initialY + ' L ' + verticalX + ',' + verticalY;
+        var horizontalLine = 'M ' + initialX + ',' + horizontalY + ' L ' + horizontalX + ',' + horizontalY;
+
+        var cross = exports.getSVGElement('path', JSONcontainer, svgContainer);
+        cross.setAttributeNS(null, 'd', verticalLine + ' ' + horizontalLine);
+
+        var polygonavg2 = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
+        polygonavg2.setAttributeNS(null, 'points', bLeftPoint + ' ' + bTopPoint + ' ' + bLinePoint + ' ' + bTopPoint + ' ' + bRightPoint);
+
+        points.push(polygonavg1);
+        points.push(cross);
+        points.push(polygonavg2);
         break;
       case 'rectangle':
-        point = exports.getSVGElement('rect', JSONcontainer, svgContainer);
-        point.setAttributeNS(null, "x", x - 0.5 * groupTemplate.width);
-        point.setAttributeNS(null, "y", y - 0.5 * groupTemplate.height);
-        point.setAttributeNS(null, "width", groupTemplate.width);
-        point.setAttributeNS(null, "height", groupTemplate.height);
+        var rectangle = exports.getSVGElement('rect', JSONcontainer, svgContainer);
+        rectangle.setAttributeNS(null, "x", x - 0.5 * groupTemplate.width);
+        rectangle.setAttributeNS(null, "y", y - 0.5 * groupTemplate.height);
+        rectangle.setAttributeNS(null, "width", groupTemplate.width);
+        rectangle.setAttributeNS(null, "height", groupTemplate.height);
+        points.push(rectangle);
         break;
     }
-
-    if (groupTemplate.styles !== undefined) {
-      point.setAttributeNS(null, "style", groupTemplate.styles);
-    }
-    point.setAttributeNS(null, "class", groupTemplate.className + " vis-point");
     //handle label
 
 
@@ -7701,15 +7749,23 @@ return /******/ (function(modules) { // webpackBootstrap
         label.setAttributeNS(null, "class", labelObj.className + " vis-label");
       }
 
-      if (labelObj.tooltip) {
-        point.setAttributeNS(null, "tooltip", labelObj.tooltip);
-      }
-
       label.setAttributeNS(null, "x", x);
       label.setAttributeNS(null, "y", y);
     }
 
-    return point;
+    points.forEach(function (point) {
+      if (groupTemplate.styles !== undefined) {
+        point.setAttributeNS(null, "style", groupTemplate.styles);
+      }
+
+      point.setAttributeNS(null, "class", groupTemplate.className + " vis-point");
+
+      if (labelObj && labelObj.tooltip) {
+        point.setAttributeNS(null, "tooltip", labelObj.tooltip);
+      }
+    });
+
+    return points;
   };
 
   /**
@@ -17862,9 +17918,9 @@ return /******/ (function(modules) { // webpackBootstrap
       // http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#JavaScript
       /*
        Copyright (c) 2011 Andrei Mackenzie
-        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-        The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+         Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+         The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
        */
 
     }, {
@@ -27300,6 +27356,21 @@ return /******/ (function(modules) { // webpackBootstrap
         extended.orginalY = item.y; //real Y
         extended.y = Number(item.y);
 
+        // Properties of items
+        if (item.props) {
+          extended.props = item.props;
+        }
+        if (item.data) {
+          extended.data = item.data;
+          if (this.groups[groupId] && this.groups[groupId].group.type === 'arrow-avg') {
+            var g = this.groups[groupId];
+            var y = g.group.props.average;
+
+            extended.orginalY = y; //real Y
+            extended.y = Number(y);
+          }
+        }
+
         var index = groupsContent[groupId].length - groupCounts[groupId]--;
         groupsContent[groupId][index] = extended;
       }
@@ -27333,9 +27404,24 @@ return /******/ (function(modules) { // webpackBootstrap
           }
         }
       }
+      this._calculateHeights();
       this.forceGraphUpdate = true;
       this.body.emitter.emit("_change", { queue: true });
     }
+  };
+
+  LineGraph.prototype._calculateHeights = function () {
+    var totalHeight = 0;
+
+    this.groupsData.forEach(function (d) {
+      if (d.rowHeightId) {
+        totalHeight += d.rowHeightId[d.className];
+      }
+    });
+
+    this.options.height = totalHeight;
+    this.options.graphHeight = totalHeight;
+    this.options.legend = { enabled: false };
   };
 
   /**
@@ -27493,6 +27579,7 @@ return /******/ (function(modules) { // webpackBootstrap
               below = group;
             }
           }
+          this._ajustYAccordingGroup(groupsData[groupIds[i]], group);
           this._convertYcoordinates(groupsData[groupIds[i]], group);
         }
 
@@ -27557,6 +27644,20 @@ return /******/ (function(modules) { // webpackBootstrap
     // cleanup unused svg elements
     DOMutil.cleanupElements(this.svgElements);
     return false;
+  };
+
+  LineGraph.prototype._ajustYAccordingGroup = function (datapoints, group) {
+    var props = void 0;
+
+    if (group.group.props) {
+      props = group.group.props;
+    }
+
+    if (group.group.type === 'arrow-avg') {
+      datapoints.map(function (d) {
+        return d.y = props.average;
+      });
+    }
   };
 
   LineGraph.prototype._stack = function (data, subData) {
@@ -27707,7 +27808,7 @@ return /******/ (function(modules) { // webpackBootstrap
               combinedDataRight = combinedDataRight.concat(group.getItems());
             }
           } else {
-            groupRanges[groupIds[i]] = group.getYRange(groupData, groupIds[i]);
+            groupRanges[groupIds[i]] = group.getYRange(groupData, groupIds[i], group);
           }
         }
       }
@@ -27907,9 +28008,12 @@ return /******/ (function(modules) { // webpackBootstrap
       showMinorLines: true,
       showMajorLabels: true,
       icons: false,
+      linesOffsetY: 0,
+      extraLineWidth: 0,
       majorLinesOffset: 7,
       minorLinesOffset: 4,
       labelOffsetX: 10,
+      linesOffsetX: 0,
       labelOffsetY: 2,
       iconWidth: 20,
       width: '40px',
@@ -28006,7 +28110,7 @@ return /******/ (function(modules) { // webpackBootstrap
       if (this.options.orientation != options.orientation && options.orientation !== undefined) {
         redraw = true;
       }
-      var fields = ['orientation', 'showMinorLabels', 'showMinorLines', 'showMajorLabels', 'icons', 'majorLinesOffset', 'minorLinesOffset', 'labelOffsetX', 'labelOffsetY', 'iconWidth', 'width', 'visible', 'data', 'left', 'right', 'alignZeros'];
+      var fields = ['orientation', 'showMinorLabels', 'showMinorLines', 'showMajorLabels', 'icons', 'linesOffsetY', 'linesOffsetX', 'extraLineWidth', 'majorLinesOffset', 'minorLinesOffset', 'labelOffsetX', 'labelOffsetY', 'iconWidth', 'width', 'visible', 'data', 'left', 'right', 'alignZeros'];
       util.selectiveDeepExtend(fields, this.options, options);
 
       this.minWidth = Number(('' + this.options.width).replace("px", ""));
@@ -28168,9 +28272,9 @@ return /******/ (function(modules) { // webpackBootstrap
       props.minorLabelHeight = showMinorLabels ? props.minorCharHeight : 0;
       props.majorLabelHeight = showMajorLabels ? props.majorCharHeight : 0;
 
-      props.minorLineWidth = this.body.dom.backgroundHorizontal.offsetWidth - this.lineOffset - this.width + 2 * this.options.minorLinesOffset;
+      props.minorLineWidth = this.body.dom.backgroundHorizontal.offsetWidth - this.lineOffset - this.width + 2 * this.options.minorLinesOffset + this.options.extraLineWidth;
       props.minorLineHeight = 1;
-      props.majorLineWidth = this.body.dom.backgroundHorizontal.offsetWidth - this.lineOffset - this.width + 2 * this.options.majorLinesOffset;
+      props.majorLineWidth = this.body.dom.backgroundHorizontal.offsetWidth - this.lineOffset - this.width + 2 * this.options.majorLinesOffset + this.options.extraLineWidth;
       props.majorLineHeight = 1;
 
       //  take frame offline while updating (is almost twice as fast)
@@ -28222,12 +28326,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
     //Override range with manual options:
     var autoScaleEnd = true;
-    if (customRange.max != undefined) {
+    if (customRange.max != undefined && !Number.isNaN(customRange.max)) {
       this.range.end = customRange.max;
       autoScaleEnd = false;
     }
     var autoScaleStart = true;
-    if (customRange.min != undefined) {
+    if (customRange.min != undefined && !Number.isNaN(customRange.min)) {
       this.range.start = customRange.min;
       autoScaleStart = false;
     }
@@ -28245,19 +28349,32 @@ return /******/ (function(modules) { // webpackBootstrap
     lines.forEach(function (line) {
       var y = line.y;
       var isMajor = line.major;
+      var isMiddle = line.middle;
+      var labelClass = 'vis-y-axis';
+      var lineClass = 'vis-grid vis-horizontal';
+      if (isMiddle) {
+        labelClass += ' vis-label-middle';
+        lineClass += ' vis-line-middle';
+      }
       if (_this.options['showMinorLabels'] && isMajor === false) {
-        _this._redrawLabel(y - 2, line.val, orientation, 'vis-y-axis vis-minor', _this.props.minorCharHeight);
+        labelClass += ' vis-minor';
+        _this._redrawLabel(y - 2, line.val, orientation, labelClass, _this.props.minorCharHeight);
       }
       if (isMajor) {
         if (y >= 0) {
-          _this._redrawLabel(y - 2, line.val, orientation, 'vis-y-axis vis-major', _this.props.majorCharHeight);
+          labelClass += ' vis-major';
+          _this._redrawLabel(y - 2, line.val, orientation, labelClass, _this.props.majorCharHeight);
         }
       }
+
       if (_this.master === true) {
+        var linesOffset = _this.options.linesOffsetY;
         if (isMajor) {
-          _this._redrawLine(y, orientation, 'vis-grid vis-horizontal vis-major', _this.options.majorLinesOffset, _this.props.majorLineWidth);
+          lineClass += ' vis-major';
+          _this._redrawLine(y + linesOffset, orientation, lineClass, _this.options.majorLinesOffset, _this.props.majorLineWidth);
         } else if (_this.options['showMinorLines']) {
-          _this._redrawLine(y, orientation, 'vis-grid vis-horizontal vis-minor', _this.options.minorLinesOffset, _this.props.minorLineWidth);
+          lineClass += ' vis-minor';
+          _this._redrawLine(y + linesOffset, orientation, lineClass, _this.options.minorLinesOffset, _this.props.minorLineWidth);
         }
       }
     });
@@ -28568,6 +28685,8 @@ return /******/ (function(modules) { // webpackBootstrap
   };
 
   DataScale.prototype.getLines = function (data) {
+    var _this = this;
+
     var lines = [];
 
     if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object' && data !== null && data.hasOwnProperty('values') && data.values.length) {
@@ -28582,7 +28701,19 @@ return /******/ (function(modules) { // webpackBootstrap
       for (var i = this._start + bottomOffset; this._end - i > 0.00001; i += step) {
         if (i != this._start) {
           //Skip the bottom line
-          lines.push({ major: this.is_major(i), y: this.convertValue(i), val: this.formatValue(i) });
+          var key = lines.findIndex(function (l) {
+            return l.val === _this.formatValue(i);
+          });
+          if (key < 0) {
+            lines.push({
+              major: this.is_major(i),
+              y: this.convertValue(i),
+              middle: i % 2,
+              val: this.formatValue(i)
+            });
+            continue;
+          }
+          lines[key].y = this.convertValue(i);
         }
       }
     }
@@ -28898,6 +29029,7 @@ return /******/ (function(modules) { // webpackBootstrap
         size: group.options.drawPoints.size / scale,
         width: group.options.drawPoints.width,
         height: group.options.drawPoints.height,
+        props: group.group.props,
         className: group.className
       };
       DOMutil.drawPoint(x + 0.5 * barWidth + offset, y + fillHeight - bar1Height - 1, groupTemplate, framework.svgElements, framework.svg);
@@ -29144,16 +29276,17 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   Points.draw = function (dataset, group, framework, offset) {
     offset = offset || 0;
+
     var callback = getCallback(framework, group);
 
     for (var i = 0; i < dataset.length; i++) {
       if (!callback) {
         // draw the point the simple way.
-        DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group), framework.svgElements, framework.svg, dataset[i].label);
+        DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data);
       } else {
         var callbackResult = callback(dataset[i], group); // result might be true, false or an object
         if (callbackResult === true || (typeof callbackResult === 'undefined' ? 'undefined' : _typeof(callbackResult)) === 'object') {
-          DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, callbackResult), framework.svgElements, framework.svg, dataset[i].label);
+          DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, callbackResult), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data);
         }
       }
     }
@@ -29182,6 +29315,7 @@ return /******/ (function(modules) { // webpackBootstrap
       size: callbackResult.size || group.options.drawPoints.size,
       height: callbackResult.height || group.options.drawPoints.height,
       width: callbackResult.width || group.options.drawPoints.width,
+      props: callbackResult.props || group.group.props,
       className: callbackResult.className || group.className
     };
   }
@@ -29206,7 +29340,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
-  "use strict";
+  'use strict';
 
   var DOMutil = __webpack_require__(7);
 
@@ -29231,6 +29365,9 @@ return /******/ (function(modules) { // webpackBootstrap
   Line.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
       var fillHeight = iconHeight * 0.5;
       var path, fillPath;
+      if (group.group.options && group.group.options.drawPoints && group.group.options.drawPoints.style && group.group.options.drawPoints.style === 'arrow-avg') {
+          y = group.group.props.average;
+      }
 
       var outline = DOMutil.getSVGElement("rect", framework.svgElements, framework.svg);
       outline.setAttributeNS(null, "x", x);
@@ -29266,8 +29403,10 @@ return /******/ (function(modules) { // webpackBootstrap
               size: group.options.drawPoints.size,
               height: group.options.drawPoints.height,
               width: group.options.drawPoints.width,
+              props: group.group.props,
               className: group.className
           };
+
           DOMutil.drawPoint(x + 0.5 * iconWidth, y, groupTemplate, framework.svgElements, framework.svg);
       }
   };
@@ -29777,10 +29916,16 @@ return /******/ (function(modules) { // webpackBootstrap
       enabled: { boolean: boolean },
       onRender: { 'function': 'function' },
       size: { number: number },
-      style: { string: ['square', 'circle'] }, // square, circle
+      style: { string: ['square', 'circle', 'triangle-up', 'triangle-down', 'arrow-avg'] }, // square, circle
       __type__: { object: object, boolean: boolean, 'function': 'function' }
     },
     dataAxis: {
+      extraLineWidth: { number: number },
+      labelOffsetY: { number: number },
+      linesOffsetY: { number: number },
+      linesOffsetX: { number: number },
+      minorLinesOffset: { number: number },
+      majorLinesOffset: { number: number },
       showMinorLabels: { boolean: boolean },
       showMajorLabels: { boolean: boolean },
       showMinorLines: { boolean: boolean },
@@ -29920,9 +30065,10 @@ return /******/ (function(modules) { // webpackBootstrap
       drawPoints: {
         enabled: true,
         size: [6, 2, 30, 1],
-        style: ['square', 'circle'] // square, circle
+        style: ['square', 'circle', 'arrow-avg'] // square, circle
       },
       dataAxis: {
+        minorLinesOffset: 0,
         showMinorLabels: true,
         showMinorLines: true,
         showMajorLabels: true,
@@ -45657,6 +45803,9 @@ return /******/ (function(modules) { // webpackBootstrap
         __type__: { object: object, string: string }
       },
       group: { string: string, number: number, 'undefined': 'undefined' },
+      maxValue: { number: number },
+      minValue: { number: number },
+      props: { min: number, max: number },
       hidden: { boolean: boolean },
       icon: {
         face: { string: string },
