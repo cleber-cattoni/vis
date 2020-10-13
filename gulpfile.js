@@ -110,6 +110,7 @@ gulp.task('bundle-css', ['clean'], function () {
     './lib/shared/bootstrap.css',
     './lib/shared/configuration.css',
 
+    './lib/timeline/component/css/timelinechart.css',
     './lib/timeline/component/css/timeline.css',
     './lib/timeline/component/css/panel.css',
     './lib/timeline/component/css/labelset.css',
