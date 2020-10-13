@@ -308,6 +308,29 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
     border-width: 12px;
     margin-top: -12px;
 }
+.vis-panel.vis-background.vis-horizontal .vis-grid.vis-horizontal.vis-timeline-chart-horizontal-line {
+  border-bottom-color: #E7E7E7;
+}
+
+.vis-panel.vis-background.vis-horizontal .vis-grid.vis-horizontal.vis-timeline-chart-guideline {
+  border-bottom-style: dashed;
+}
+
+.vis-timeline-chart-data-axis {
+  position: relative;
+}
+
+.vis-timeline-chart-y-axis {
+  width: 100%;
+  font-size: 12px;
+  line-height: 10px;
+  position: absolute;
+  padding-right: 5px;
+}
+.vis-timeline-chart-background {
+  position: absolute; 
+  z-index: -1;
+}
 
 .vis-timeline {
   position: relative;
