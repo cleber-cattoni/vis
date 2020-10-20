@@ -7792,7 +7792,7 @@ return /******/ (function(modules) { // webpackBootstrap
       });
     } else {
       element.addEventListener(name, function (eve) {
-        return exports.eventCallback(eve, element, data);
+        return callback(eve, element, data);
       });
     }
   };
