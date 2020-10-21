@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2020-10-13
+ * @date    2020-10-20
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -7773,6 +7773,28 @@ return /******/ (function(modules) { // webpackBootstrap
     });
 
     return points;
+  };
+
+  exports.attachEvents = function (element, name, data, callback) {
+    if (element && Array.isArray(element)) {
+      element.forEach(function (ele, index) {
+        if (Array.isArray(ele)) {
+          ele.forEach(function (e) {
+            return e.addEventListener(name, function (eve) {
+              return callback(eve, e, data[index]);
+            });
+          });
+        } else {
+          ele.addEventListener(name, function (eve) {
+            return callback(eve, ele, data[index]);
+          });
+        }
+      });
+    } else {
+      element.addEventListener(name, function (eve) {
+        return callback(eve, element, data);
+      });
+    }
   };
 
   /**
@@ -29221,8 +29243,10 @@ return /******/ (function(modules) { // webpackBootstrap
     offset = offset || 0;
 
     var callback = getCallback(framework, group);
+    var points = [];
 
     for (var i = 0; i < dataset.length; i++) {
+      var point = void 0;
       var d = dataset[i];
       var props = {
         maxValue: d.maxValue,
@@ -29232,14 +29256,16 @@ return /******/ (function(modules) { // webpackBootstrap
       };
       if (!callback) {
         // draw the point the simple way.
-        DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data, props);
+        point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data, props);
       } else {
         var callbackResult = callback(dataset[i], group); // result might be true, false or an object
         if (callbackResult === true || (typeof callbackResult === 'undefined' ? 'undefined' : _typeof(callbackResult)) === 'object') {
-          DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, callbackResult), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data, props);
+          point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, callbackResult), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data, props);
         }
       }
+      points.push(point);
     }
+    return points;
   };
 
   Points.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
@@ -29410,6 +29436,7 @@ return /******/ (function(modules) { // webpackBootstrap
           // copy properties to path for drawing.
           path.setAttributeNS(null, 'd', 'M' + pathArray[0][0] + "," + pathArray[0][1] + " " + this.serializePath(pathArray, type, false));
       }
+      return path;
   };
 
   Line.serializePath = function (pathArray, type, inverse) {
@@ -30199,7 +30226,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
       // item set
       _this.linegraph = new TimelineChartLineGraph(_this.body);
-
       _this.components.push(_this.linegraph);
 
       _this.itemsData = null; // DataSet
@@ -30349,6 +30375,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
   'use strict';
 
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
   var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -30359,6 +30387,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
   function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+  var util = __webpack_require__(1);
   var DOMutil = __webpack_require__(7);
   var Bars = __webpack_require__(53);
   var Lines = __webpack_require__(55);
@@ -30367,13 +30396,18 @@ return /******/ (function(modules) { // webpackBootstrap
   var LineGraph = __webpack_require__(49);
   var TimelineChartDataAxis = __webpack_require__(60);
 
+  var UNGROUPED = '__ungrouped__'; // reserved group id for ungrouped items
+
   var TimelineChartLineGraph = function (_LineGraph) {
     _inherits(TimelineChartLineGraph, _LineGraph);
 
     function TimelineChartLineGraph(body, options) {
       _classCallCheck(this, TimelineChartLineGraph);
 
-      return _possibleConstructorReturn(this, (TimelineChartLineGraph.__proto__ || Object.getPrototypeOf(TimelineChartLineGraph)).call(this, body, options));
+      var _this = _possibleConstructorReturn(this, (TimelineChartLineGraph.__proto__ || Object.getPrototypeOf(TimelineChartLineGraph)).call(this, body, options));
+
+      _this.options = util.extend({}, _this.defaultOptions);
+      return _this;
     }
 
     _createClass(TimelineChartLineGraph, [{
@@ -30407,6 +30441,8 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: '_updateGraph',
       value: function _updateGraph() {
+        var _this2 = this;
+
         // reset the svg elements
         DOMutil.prepareElements(this.svgElements);
         if (this.props.width != 0 && this.itemsData != null) {
@@ -30420,117 +30456,155 @@ return /******/ (function(modules) { // webpackBootstrap
           // getting group Ids
           var groupIds = this._getSortedGroupIds();
           if (groupIds.length > 0) {
-            var groupsData = {};
+            var groupsData;
+            var below;
+            var previousY;
+            var actualY;
+            var paths;
+            var dataset;
+            var subGroupId;
 
-            // fill groups data, this only loads the data we require based on the timewindow
-            this._getRelevantData(groupIds, groupsData, minDate, maxDate);
+            var _ret = function () {
+              groupsData = {};
 
-            // apply sampling, if disabled, it will pass through this function.
-            this._applySampling(groupIds, groupsData);
+              // fill groups data, this only loads the data we require based on the timewindow
 
-            // we transform the X coordinates to detect collisions
-            for (i = 0; i < groupIds.length; i++) {
-              this._convertXcoordinates(groupsData[groupIds[i]]);
-            }
+              _this2._getRelevantData(groupIds, groupsData, minDate, maxDate);
 
-            // now all needed data has been collected we start the processing.
-            this._getYRanges(groupIds, groupsData, groupRanges);
+              // apply sampling, if disabled, it will pass through this function.
+              _this2._applySampling(groupIds, groupsData);
 
-            // update the Y axis first, we use this data to draw at the correct Y points
-            changeCalled = this._updateYAxis(groupIds, groupRanges);
+              // we transform the X coordinates to detect collisions
+              for (i = 0; i < groupIds.length; i++) {
+                _this2._convertXcoordinates(groupsData[groupIds[i]]);
+              }
 
-            //  at changeCalled, abort this update cycle as the graph needs another update with new Width input from the Redraw container.
-            //  Cleanup SVG elements on abort.
-            if (changeCalled == true) {
-              DOMutil.cleanupElements(this.svgElements);
-              this.abortedGraphUpdate = true;
-              return true;
-            }
-            this.abortedGraphUpdate = false;
+              // now all needed data has been collected we start the processing.
+              _this2._getYRanges(groupIds, groupsData, groupRanges);
 
-            // With the yAxis scaled correctly, use this to get the Y values of the points.
-            var below = undefined;
-            var previousY = 0;
-            var actualY = 0;
-            for (i = 0; i < groupIds.length; i++) {
-              group = this.groups[groupIds[i]];
-              if (this.options.stack === true && this.options.style === 'line') {
-                if (group.options.excludeFromStacking == undefined || !group.options.excludeFromStacking) {
-                  if (below != undefined) {
-                    this._stack(groupsData[group.id], groupsData[below.id]);
-                    if (group.options.shaded.enabled == true && group.options.shaded.orientation !== "group") {
-                      if (group.options.shaded.orientation == "top" && below.options.shaded.orientation !== "group") {
-                        below.options.shaded.orientation = "group";
-                        below.options.shaded.groupId = group.id;
-                      } else {
-                        group.options.shaded.orientation = "group";
-                        group.options.shaded.groupId = below.id;
+              // update the Y axis first, we use this data to draw at the correct Y points
+              changeCalled = _this2._updateYAxis(groupIds, groupRanges);
+
+              //  at changeCalled, abort this update cycle as the graph needs another update with new Width input from the Redraw container.
+              //  Cleanup SVG elements on abort.
+              if (changeCalled == true) {
+                DOMutil.cleanupElements(_this2.svgElements);
+                _this2.abortedGraphUpdate = true;
+                return {
+                  v: true
+                };
+              }
+              _this2.abortedGraphUpdate = false;
+
+              // With the yAxis scaled correctly, use this to get the Y values of the points.
+              below = undefined;
+              previousY = 0;
+              actualY = 0;
+
+              for (i = 0; i < groupIds.length; i++) {
+                group = _this2.groups[groupIds[i]];
+                if (_this2.options.stack === true && _this2.options.style === 'line') {
+                  if (group.options.excludeFromStacking == undefined || !group.options.excludeFromStacking) {
+                    if (below != undefined) {
+                      _this2._stack(groupsData[group.id], groupsData[below.id]);
+                      if (group.options.shaded.enabled == true && group.options.shaded.orientation !== "group") {
+                        if (group.options.shaded.orientation == "top" && below.options.shaded.orientation !== "group") {
+                          below.options.shaded.orientation = "group";
+                          below.options.shaded.groupId = group.id;
+                        } else {
+                          group.options.shaded.orientation = "group";
+                          group.options.shaded.groupId = below.id;
+                        }
                       }
                     }
+                    below = group;
                   }
-                  below = group;
                 }
+                previousY = actualY;
+                actualY += group.group.rowHeightId['tl-groups_' + group.id];
+                _this2._convertYcoordinates(groupsData[groupIds[i]], group, actualY, previousY);
               }
-              previousY = actualY;
-              actualY += group.group.rowHeightId['tl-groups_' + group.id];
-              this._convertYcoordinates(groupsData[groupIds[i]], group, actualY, previousY);
-            }
 
-            //Precalculate paths and draw shading if appropriate. This will make sure the shading is always behind any lines.
-            var paths = {};
-            for (i = 0; i < groupIds.length; i++) {
-              group = this.groups[groupIds[i]];
-              if (group.options.style === 'line' && group.options.shaded.enabled == true) {
-                var dataset = groupsData[groupIds[i]];
-                if (dataset == null || dataset.length == 0) {
-                  continue;
-                }
-                if (!paths.hasOwnProperty(groupIds[i])) {
-                  paths[groupIds[i]] = Lines.calcPath(dataset, group);
-                }
-                if (group.options.shaded.orientation === "group") {
-                  var subGroupId = group.options.shaded.groupId;
-                  if (groupIds.indexOf(subGroupId) === -1) {
-                    console.log(group.id + ": Unknown shading group target given:" + subGroupId);
+              //Precalculate paths and draw shading if appropriate. This will make sure the shading is always behind any lines.
+              paths = {};
+
+              for (i = 0; i < groupIds.length; i++) {
+                group = _this2.groups[groupIds[i]];
+                if (group.options.style === 'line' && group.options.shaded.enabled == true) {
+                  dataset = groupsData[groupIds[i]];
+
+                  if (dataset == null || dataset.length == 0) {
                     continue;
                   }
-                  if (!paths.hasOwnProperty(subGroupId)) {
-                    paths[subGroupId] = Lines.calcPath(groupsData[subGroupId], this.groups[subGroupId]);
+                  if (!paths.hasOwnProperty(groupIds[i])) {
+                    paths[groupIds[i]] = Lines.calcPath(dataset, group);
                   }
-                  Lines.drawShading(paths[groupIds[i]], group, paths[subGroupId], this.framework);
-                } else {
-                  Lines.drawShading(paths[groupIds[i]], group, undefined, this.framework);
-                }
-              }
-            }
+                  if (group.options.shaded.orientation === "group") {
+                    subGroupId = group.options.shaded.groupId;
 
-            // draw the groups, calculating paths if still necessary.
-            Bars.draw(groupIds, groupsData, this.framework);
-            for (i = 0; i < groupIds.length; i++) {
-              group = this.groups[groupIds[i]];
-              if (groupsData[groupIds[i]].length > 0) {
-                switch (group.options.style) {
-                  case "line":
-                    if (!paths.hasOwnProperty(groupIds[i])) {
-                      paths[groupIds[i]] = Lines.calcPath(groupsData[groupIds[i]], group);
+                    if (groupIds.indexOf(subGroupId) === -1) {
+                      console.log(group.id + ": Unknown shading group target given:" + subGroupId);
+                      continue;
                     }
-                    Lines.draw(paths[groupIds[i]], group, this.framework);
-                  //explicit no break;
-                  case "point":
-                  //explicit no break;
-                  case "points":
-                    if (group.options.style == "point" || group.options.style == "points" || group.options.drawPoints.enabled == true) {
-                      Points.draw(groupsData[groupIds[i]], group, this.framework);
+                    if (!paths.hasOwnProperty(subGroupId)) {
+                      paths[subGroupId] = Lines.calcPath(groupsData[subGroupId], _this2.groups[subGroupId]);
                     }
-                    break;
-                  case "bar":
-                  // bar needs to be drawn enmasse
-                  //explicit no break
-                  default:
-                  //do nothing...
+                    Lines.drawShading(paths[groupIds[i]], group, paths[subGroupId], _this2.framework);
+                  } else {
+                    Lines.drawShading(paths[groupIds[i]], group, undefined, _this2.framework);
+                  }
                 }
               }
-            }
+
+              // draw the groups, calculating paths if still necessary.
+              Bars.draw(groupIds, groupsData, _this2.framework);
+              var callbackFunction = function callbackFunction(visEventName, event, element, data) {
+                _this2.body.emitter.emit(visEventName, { data: data, event: event, element: element });
+              };
+              for (i = 0; i < groupIds.length; i++) {
+                group = _this2.groups[groupIds[i]];
+                if (groupsData[groupIds[i]].length > 0) {
+                  switch (group.options.style) {
+                    case "line":
+                      if (!paths.hasOwnProperty(groupIds[i])) {
+                        paths[groupIds[i]] = Lines.calcPath(groupsData[groupIds[i]], group);
+                      }
+
+                      var line = Lines.draw(paths[groupIds[i]], group, _this2.framework);
+
+                      if (group.group.type === 'line') {
+                        DOMutil.attachEvents(line, 'mouseenter', groupsData[groupIds[i]], function (event, element, data) {
+                          return callbackFunction('itemmouseenter', event, element, data);
+                        });
+                        DOMutil.attachEvents(line, 'mouseout', groupsData[groupIds[i]], function (event, element, data) {
+                          return callbackFunction('itemmouseout', event, element, data);
+                        });
+                      }
+                    //explicit no break;
+                    case "point":
+                    //explicit no break;
+                    case "points":
+                      if (group.options.style == "point" || group.options.style == "points" || group.options.drawPoints.enabled == true) {
+                        var points = Points.draw(groupsData[groupIds[i]], group, _this2.framework);
+                        DOMutil.attachEvents(points, 'mouseenter', groupsData[groupIds[i]], function (event, element, data) {
+                          return callbackFunction('itemmouseenter', event, element, data);
+                        });
+                        DOMutil.attachEvents(points, 'mouseout', groupsData[groupIds[i]], function (event, element, data) {
+                          return callbackFunction('itemmouseout', event, element, data);
+                        });
+                      }
+                      break;
+                    case "bar":
+                    // bar needs to be drawn enmasse
+                    //explicit no break
+                    default:
+                    //do nothing...
+                  }
+                }
+              }
+            }();
+
+            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
           }
         }
 
@@ -30539,13 +30613,58 @@ return /******/ (function(modules) { // webpackBootstrap
         return false;
       }
     }, {
+      key: 'setOptions',
+      value: function setOptions(options) {
+        if (options) {
+          var fields = ['events', 'height', 'graphHeight', 'style', 'dataAxis', 'groups'];
+          if (options.graphHeight === undefined && options.height !== undefined) {
+            this.updateSVGheight = true;
+            this.updateSVGheightOnResize = true;
+          } else if (this.body.domProps.centerContainer.height !== undefined && options.graphHeight !== undefined) {
+            if (parseInt((options.graphHeight + '').replace("px", '')) < this.body.domProps.centerContainer.height) {
+              this.updateSVGheight = true;
+            }
+          }
+          util.selectiveDeepExtend(fields, this.options, options);
+          util.mergeOptions(this.options, options, 'interpolation');
+          util.mergeOptions(this.options, options, 'drawPoints');
+          util.mergeOptions(this.options, options, 'shaded');
+          util.mergeOptions(this.options, options, 'legend');
+
+          if (this.yAxisLeft) {
+            if (options.dataAxis !== undefined) {
+              this.yAxisLeft.setOptions(this.options.dataAxis);
+              this.yAxisRight.setOptions(this.options.dataAxis);
+            }
+          }
+
+          if (this.legendLeft) {
+            if (options.legend !== undefined) {
+              this.legendLeft.setOptions(this.options.legend);
+              this.legendRight.setOptions(this.options.legend);
+            }
+          }
+
+          if (this.groups.hasOwnProperty(UNGROUPED)) {
+            this.groups[UNGROUPED].setOptions(options);
+          }
+        }
+
+        // this is used to redraw the graph if the visibility of the groups is changed.
+        if (this.dom.frame) {
+          //not on initial run?
+          this.forceGraphUpdate = true;
+          this.body.emitter.emit("_change", { queue: true });
+        }
+      }
+    }, {
       key: '_updateGroups',
       value: function _updateGroups(groupsContent) {
-        var _this2 = this;
+        var _this3 = this;
 
         this.groupsData.forEach(function (group) {
-          _this2._updateGroup(group, group.id);
-          _this2.groups[group.id].setItems(groupsContent[group.id]);
+          _this3._updateGroup(group, group.id);
+          _this3.groups[group.id].setItems(groupsContent[group.id]);
         });
       }
     }, {
@@ -30648,8 +30767,8 @@ return /******/ (function(modules) { // webpackBootstrap
           }
         });
 
-        this.options.height = totalHeight;
-        this.options.graphHeight = totalHeight;
+        this.options.height = totalHeight + 1;
+        this.options.graphHeight = totalHeight + 1;
         this.options.legend = { enabled: false };
       }
     }]);
@@ -30688,6 +30807,37 @@ return /******/ (function(modules) { // webpackBootstrap
       _classCallCheck(this, TimelineChartDataAxis);
 
       var _this = _possibleConstructorReturn(this, (TimelineChartDataAxis.__proto__ || Object.getPrototypeOf(TimelineChartDataAxis)).call(this, body, options, svg, linegraphOptions));
+
+      _this.defaultOptions = {
+        orientation: 'left', // supported: 'left', 'right'
+        showMinorLabels: true,
+        showMinorLines: true,
+        showMajorLabels: true,
+        icons: false,
+        majorLinesOffset: 7,
+        minorLinesOffset: 4,
+        labelOffsetX: 10,
+        labelOffsetY: 2,
+        iconWidth: 20,
+        width: '40px',
+        visible: true,
+        alignZeros: true,
+        data: undefined,
+        left: {
+          range: { min: undefined, max: undefined },
+          format: function format(value) {
+            return '' + parseFloat(value.toPrecision(3));
+          },
+          title: { text: undefined, style: undefined }
+        },
+        right: {
+          range: { min: undefined, max: undefined },
+          format: function format(value) {
+            return '' + parseFloat(value.toPrecision(3));
+          },
+          title: { text: undefined, style: undefined }
+        }
+      };
 
       _this.DOMelements.backgrounds = {};
 
