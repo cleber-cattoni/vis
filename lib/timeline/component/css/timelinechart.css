@@ -21,3 +21,20 @@
   position: absolute; 
   z-index: -1;
 }
+
+.vis-timeline-chart.summary-chart-visualization .vis-left {
+  
+  visibility: hidden !important;
+}
+
+.vis-timeline-chart.summary-chart-visualization .vis-timeline-chart-background {
+  background-color: #FFFFFF !important;
+}
+
+.vis-timeline-chart.summary-chart-visualization .vis-horizontal.vis-timeline-chart-guideline {
+  border: none !important;
+}
+
+.vis-timeline-chart.summary-chart-visualization .vis-horizontal.vis-timeline-chart-horizontal-line {
+  border-color: #d9d9d933 !important;
+}
