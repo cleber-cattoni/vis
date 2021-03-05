@@ -28368,7 +28368,7 @@ return /******/ (function(modules) { // webpackBootstrap
     var offset = this.options.icons === true ? Math.max(this.options.iconWidth, titleWidth) + this.options.labelOffsetX + 15 : titleWidth + this.options.labelOffsetX + 15;
 
     // this will resize the yAxis to accommodate the labels.
-    if (this.maxLabelSize > this.width - offset && this.options.visible === true) {
+    /*if (this.maxLabelSize > this.width - offset && this.options.visible === true) {
       this.width = this.maxLabelSize + offset;
       this.options.width = this.width + "px";
       DOMutil.cleanupElements(this.DOMelements.lines);
@@ -28377,7 +28377,8 @@ return /******/ (function(modules) { // webpackBootstrap
       resized = true;
     }
     // this will resize the yAxis if it is too big for the labels.
-    else if (this.maxLabelSize < this.width - offset && this.options.visible === true && this.width > this.minWidth) {
+    else*/
+	if (this.maxLabelSize < this.width - offset && this.options.visible === true && this.width > this.minWidth) {
         this.width = Math.max(this.minWidth, this.maxLabelSize + offset);
         this.options.width = this.width + "px";
         DOMutil.cleanupElements(this.DOMelements.lines);
