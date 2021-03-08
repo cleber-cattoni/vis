@@ -22,11 +22,6 @@
   z-index: -1;
 }
 
-.vis-timeline-chart.summary-chart-visualization .vis-left {
-  
-  visibility: hidden !important;
-}
-
 .vis-timeline-chart.summary-chart-visualization .vis-timeline-chart-background {
   background-color: #FFFFFF !important;
 }
