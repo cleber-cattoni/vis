@@ -32,4 +32,9 @@
 
 .vis-timeline-chart.summary-chart-visualization .vis-horizontal.vis-timeline-chart-horizontal-line {
   border-color: #d9d9d933 !important;
+  display: none;
+}
+
+.flowsheet-timeline .vis-timeline-chart.summary-chart-visualization .vis-horizontal {
+  border-bottom: 2px solid #d9d9d933;
 }
