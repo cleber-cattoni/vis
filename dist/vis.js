@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-03-24
+ * @date    2021-03-25
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -28112,6 +28112,7 @@ return /******/ (function(modules) { // webpackBootstrap
   function DataAxis(body, options, svg, linegraphOptions) {
     this.id = util.randomUUID();
     this.body = body;
+    var dataRegionTimeline = document.querySelector('.data-region.data-container-with-timeline');
 
     this.defaultOptions = {
       orientation: 'left', // supported: 'left', 'right'
@@ -28124,7 +28125,7 @@ return /******/ (function(modules) { // webpackBootstrap
       labelOffsetX: 10,
       labelOffsetY: 2,
       iconWidth: 20,
-      width: document.querySelector('.data-region.data-container-with-timeline') ? parseInt(document.querySelector('.data-region.data-container-with-timeline').offsetWidth / 26) + 'px' : '0px',
+      width: dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px',
       visible: true,
       alignZeros: true,
       data: undefined,
@@ -31048,6 +31049,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
       var _this = _possibleConstructorReturn(this, (TimelineChartDataAxis.__proto__ || Object.getPrototypeOf(TimelineChartDataAxis)).call(this, body, options, svg, linegraphOptions));
 
+      var dataRegionTimeline = document.querySelector('.data-region.data-container-with-timeline');
+
       _this.defaultOptions = {
         orientation: 'left', // supported: 'left', 'right'
         showMinorLabels: true,
@@ -31059,7 +31062,7 @@ return /******/ (function(modules) { // webpackBootstrap
         labelOffsetX: 10,
         labelOffsetY: 2,
         iconWidth: 20,
-        width: document.querySelector('.data-region.data-container-with-timeline') ? parseInt(document.querySelector('.data-region.data-container-with-timeline').offsetWidth / 26) + 'px' : '0px',
+        width: dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px',
         visible: true,
         alignZeros: true,
         data: undefined,
