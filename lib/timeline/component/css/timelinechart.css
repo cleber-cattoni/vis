@@ -33,3 +33,7 @@
 .vis-timeline-chart.summary-chart-visualization .vis-horizontal.vis-timeline-chart-horizontal-line {
   border-color: #d9d9d933 !important;
 }
+
+.vis-timeline-chart .vis-horizontal .vis-timeline-chart-background.hovered {
+  background-color: #F2F2F2 !important;
+}
