@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2020-10-20
+ * @date    2021-03-25
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -1590,7 +1590,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ (function(module, exports, __webpack_require__) {
 
   var require;/* WEBPACK VAR INJECTION */(function(module) {//! moment.js
-  //! version : 2.27.0
+  //! version : 2.29.1
   //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
   //! license : MIT
   //! momentjs.com
@@ -4131,8 +4131,7 @@ return /******/ (function(modules) { // webpackBootstrap
       hooks.createFromInputFallback = deprecate(
           'value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), ' +
               'which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are ' +
-              'discouraged and will be removed in an upcoming major release. Please refer to ' +
-              'http://momentjs.com/guides/#/warnings/js-date/ for more info.',
+              'discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.',
           function (config) {
               config._d = new Date(config._i + (config._useUTC ? ' UTC' : ''));
           }
@@ -5317,7 +5316,10 @@ return /******/ (function(modules) { // webpackBootstrap
       function calendar$1(time, formats) {
           // Support for single parameter, formats only overload to the calendar function
           if (arguments.length === 1) {
-              if (isMomentInput(arguments[0])) {
+              if (!arguments[0]) {
+                  time = undefined;
+                  formats = undefined;
+              } else if (isMomentInput(arguments[0])) {
                   time = arguments[0];
                   formats = undefined;
               } else if (isCalendarSpec(arguments[0])) {
@@ -5995,7 +5997,7 @@ return /******/ (function(modules) { // webpackBootstrap
               eras = this.localeData().eras();
           for (i = 0, l = eras.length; i < l; ++i) {
               // truncate time
-              val = this.startOf('day').valueOf();
+              val = this.clone().startOf('day').valueOf();
 
               if (eras[i].since <= val && val <= eras[i].until) {
                   return eras[i].name;
@@ -6015,7 +6017,7 @@ return /******/ (function(modules) { // webpackBootstrap
               eras = this.localeData().eras();
           for (i = 0, l = eras.length; i < l; ++i) {
               // truncate time
-              val = this.startOf('day').valueOf();
+              val = this.clone().startOf('day').valueOf();
 
               if (eras[i].since <= val && val <= eras[i].until) {
                   return eras[i].narrow;
@@ -6035,7 +6037,7 @@ return /******/ (function(modules) { // webpackBootstrap
               eras = this.localeData().eras();
           for (i = 0, l = eras.length; i < l; ++i) {
               // truncate time
-              val = this.startOf('day').valueOf();
+              val = this.clone().startOf('day').valueOf();
 
               if (eras[i].since <= val && val <= eras[i].until) {
                   return eras[i].abbr;
@@ -6058,7 +6060,7 @@ return /******/ (function(modules) { // webpackBootstrap
               dir = eras[i].since <= eras[i].until ? +1 : -1;
 
               // truncate time
-              val = this.startOf('day').valueOf();
+              val = this.clone().startOf('day').valueOf();
 
               if (
                   (eras[i].since <= val && val <= eras[i].until) ||
@@ -7209,7 +7211,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
       //! moment.js
 
-      hooks.version = '2.27.0';
+      hooks.version = '2.29.1';
 
       setHookCallback(createLocal);
 
@@ -14715,22 +14717,12 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
-  var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
+  (function (global, factory) {
+     true ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.propagating = factory());
+  }(this, (function () { 'use strict';
 
-  (function (factory) {
-    if (true) {
-      // AMD. Register as an anonymous module.
-      !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-    } else if (typeof exports === 'object') {
-      // Node. Does not work with strict CommonJS, but
-      // only CommonJS-like environments that support module.exports,
-      // like Node.
-      module.exports = factory();
-    } else {
-      // Browser globals (root is window)
-      window.propagating = factory();
-    }
-  }(function () {
     var _firstTarget = null; // singleton, will contain the target element where the touch event started
 
     /**
@@ -14755,7 +14747,7 @@ return /******/ (function(modules) { // webpackBootstrap
      * @return {Hammer.Manager} Returns the same hammer instance with extended
      *                          functionality
      */
-    return function propagating(hammer, options) {
+    function propagating(hammer, options) {
       var _options = options || {
         preventDefault: false
       };
@@ -14920,7 +14912,7 @@ return /******/ (function(modules) { // webpackBootstrap
           event.srcEvent.stopPropagation = function(){
             srcStop();
             event.stopPropagation();
-          }
+          };
         }
 
         // attach firstTarget property to the event
@@ -14944,8 +14936,11 @@ return /******/ (function(modules) { // webpackBootstrap
       }
 
       return wrapper;
-    };
-  }));
+    }
+
+    return propagating;
+
+  })));
 
 
 /***/ }),
@@ -18084,7 +18079,7 @@ return /******/ (function(modules) { // webpackBootstrap
   Range.prototype.setOptions = function (options) {
     if (options) {
       // copy the options that we know
-      var fields = ['direction', 'min', 'max', 'zoomMin', 'zoomMax', 'moveable', 'zoomable', 'moment', 'activate', 'hiddenDates', 'zoomKey'];
+      var fields = ['direction', 'min', 'max', 'zoomMin', 'zoomMax', 'moveable', 'zoomable', 'moment', 'activate', 'hiddenDates', 'zoomKey', 'gap'];
       util.selectiveExtend(fields, this.options, options);
 
       if ('start' in options || 'end' in options) {
@@ -22584,7 +22579,7 @@ return /******/ (function(modules) { // webpackBootstrap
     if (stepHour * 4 > minimumStep) {
       this.scale = 'hour';this.step = 4;
     }
-    if (stepHour > minimumStep) {
+    if (stepHour >= minimumStep) {
       this.scale = 'hour';this.step = 1;
     }
     if (stepMinute * 15 > minimumStep) {
@@ -23450,7 +23445,7 @@ return /******/ (function(modules) { // webpackBootstrap
       item = visibleItems[i];
       if (!item.displayed) item.show();
       // reposition item horizontally
-      item.repositionX();
+      item.repositionX(true, range);
     }
 
     // debug
@@ -23515,7 +23510,7 @@ return /******/ (function(modules) { // webpackBootstrap
     if (item.isVisible(range)) {
       if (!item.displayed) item.show();
       // reposition item horizontally
-      item.repositionX();
+      item.repositionX(true, range);
       visibleItems.push(item);
     } else {
       if (item.displayed) item.hide();
@@ -24701,12 +24696,82 @@ return /******/ (function(modules) { // webpackBootstrap
    *                                   not correspond to the ranges start and end
    * @Override
    */
-  RangeItem.prototype.repositionX = function (limitSize) {
+  RangeItem.prototype.repositionX = function (limitSize, group) {
+    var dataIdItemSplit = this.data.id.split('_');
+    var prop = this.data.prop;
+
+    var elementHeaderWidthItem = document.querySelectorAll('.tl-setting-bar__item');
+    var elementHeaderWidth = document.querySelector('.tl-setting-bar');
     var parentWidth = this.parent.width;
     var start = this.conversion.toScreen(this.data.start);
     var end = this.conversion.toScreen(this.data.end);
     var contentLeft;
     var contentWidth;
+
+    // calculate when gap === 0 (fit)
+    if (group.options.gap == 0) {
+      var _dateStart = new Date(group.start);
+      var _dateElement = new Date(this.data.start);
+      var _dateElementEnd = new Date(this.data.end);
+      var index = 0;
+      var indexEnd = 0;
+      var itemHours = null;
+      // if the hours difference comes negative it calculates with one more day
+      var diffNegative = function diffNegative(dateStart, dateEnd) {
+        var diffFunction = dateStart.diff(dateEnd);
+        if (diffFunction < 1) diffNegative(dateStart.add(1, 'day'), dateEnd);
+        return diffFunction;
+      };
+      // scrolls through the items in the settingbar
+      Object.values(elementHeaderWidth.children).forEach(function (item) {
+        var itemCurrentSplit = item.querySelector('.item-label').innerText.split(':');
+        var hours = itemCurrentSplit[0];
+        var minutes = itemCurrentSplit[1];
+        var diff = 0;
+        if (itemHours) {
+          //calculete difference de hours,
+          diff = moment().hours(hours).minutes(minutes).diff(itemHours);
+          //if diferrence negative, add one more day
+          if (diff < 1) {
+            diff = diffNegative(moment().add(1, 'day').hours(hours).minutes(minutes), itemHours);
+          }
+        }
+        //checks for shorter start times and adds the corresponding index
+        if (_dateStart < _dateElement || _dateStart < _dateElementEnd) {
+          _dateStart = new Date(_dateStart.getTime() + diff);
+          if (_dateStart < _dateElement) index++;
+          if (_dateStart < _dateElementEnd) indexEnd++;
+        }
+        itemHours = moment().hours(hours).minutes(minutes);
+      });
+
+      //multiplies the index with the width of the settingbar item and adds half more width to align correctly
+      var widthElement = parseFloat(elementHeaderWidth.offsetWidth / elementHeaderWidthItem.length).toFixed(2);
+      start = widthElement * index + widthElement / 2;
+      end = widthElement * indexEnd + widthElement / 2;
+
+      // Take element width 'tl-setting-bar__item' of the handler timeline and calculate width
+    } else if (dataIdItemSplit && elementHeaderWidthItem && elementHeaderWidth && elementHeaderWidth.offsetWidth && ['tablemode', 'tablemode_multiple_values'].indexOf(prop.type) > -1) {
+      var _widthElement = parseFloat(elementHeaderWidth.offsetWidth / elementHeaderWidthItem.length).toFixed(2);
+      var calcPositionStart = parseInt(dataIdItemSplit[1]) * _widthElement;
+      var calcPositionEnd = (parseInt(dataIdItemSplit[1]) + 1) * _widthElement;
+      start = calcPositionStart;
+      end = start == 0 ? _widthElement : calcPositionEnd;
+    } else if (dataIdItemSplit && elementHeaderWidthItem && elementHeaderWidth && elementHeaderWidth.offsetWidth && group) {
+      var _widthElement2 = parseFloat(elementHeaderWidth.offsetWidth / elementHeaderWidthItem.length).toFixed(2);
+      var dateStart = new Date(group.start);
+      var gap = 1 / group.options.gap;
+      var dateElement = new Date(this.data.start);
+      var timeDiffElement = Math.abs(dateElement.getTime() - dateStart.getTime());
+      var diffHoursElement = parseFloat(timeDiffElement / (1000 * 60 * 60)).toFixed(2);
+      var _calcPositionStart = gap * diffHoursElement * _widthElement2;
+      start = _calcPositionStart;
+      if (new Date(this.data.end) != new Date(this.data.start)) {
+        var dateElementEnd = new Date(this.data.end);
+        var timeDiffElementBackground = Math.abs(dateElementEnd.getTime() - dateElement.getTime());
+        end = timeDiffElementBackground / (1000 * 60 * 60) * _widthElement2 * gap + start;
+      }
+    }
 
     // limit the width of the range, as browsers cannot draw very wide divs
     if (limitSize === undefined || limitSize === true) {
@@ -25104,7 +25169,8 @@ return /******/ (function(modules) { // webpackBootstrap
       maxMinorChars: 7,
       format: TimeStep.FORMAT,
       moment: moment,
-      timeAxis: null
+      timeAxis: null,
+      gap: 1
     };
     this.options = util.extend({}, this.defaultOptions);
 
@@ -25129,7 +25195,7 @@ return /******/ (function(modules) { // webpackBootstrap
   TimeAxis.prototype.setOptions = function (options) {
     if (options) {
       // copy all options that we know
-      util.selectiveExtend(['showMinorLabels', 'showMinorLines', 'showMajorLabels', 'maxMinorChars', 'hiddenDates', 'timeAxis', 'moment'], this.options, options);
+      util.selectiveExtend(['showMinorLabels', 'showMinorLines', 'showMajorLabels', 'maxMinorChars', 'hiddenDates', 'timeAxis', 'moment', 'gap'], this.options, options);
 
       // deep copy the format options
       util.selectiveDeepExtend(['format'], this.options, options);
@@ -25248,6 +25314,13 @@ return /******/ (function(modules) { // webpackBootstrap
     var start = util.convert(this.body.range.start, 'Number');
     var end = util.convert(this.body.range.end, 'Number');
     var timeLabelsize = this.body.util.toTime((this.props.minorCharWidth || 10) * this.options.maxMinorChars).valueOf();
+
+    // iterval step 1 hour
+    if (this.props.minorCharWidth > 0) {
+      var gap = this.options.gap > 1 ? this.options.gap : 1;
+      timeLabelsize = util.convert(this.body.range.start, 'Number') + 60 * 60 * 1000 * gap;
+    }
+
     var minimumStep = timeLabelsize - DateUtil.getHiddenDurationBefore(this.options.moment, this.body.hiddenDates, this.body.range, timeLabelsize);
     minimumStep -= this.body.util.toTime(0).valueOf();
 
@@ -25308,6 +25381,15 @@ return /******/ (function(modules) { // webpackBootstrap
       width = xNext - x;
       var showMinorGrid = width >= prevWidth * 0.4; // prevent displaying of the 31th of the month on a scale of 5 days
 
+      // Calculation of the possibility of the vertical line taking into account the size of the header
+      var elementHeaderWidthItem = document.querySelectorAll('.tl-setting-bar__item');
+      var elementHeaderWidth = document.querySelector('.tl-setting-bar');
+      if (elementHeaderWidthItem && elementHeaderWidth && elementHeaderWidth.offsetWidth) {
+        var widthElement = parseFloat(elementHeaderWidth.offsetWidth / elementHeaderWidthItem.length).toFixed(2);
+        var _gap = this.options.gap >= 1 ? this.options.gap : 1 / this.options.gap;
+        width = _gap * widthElement;
+      }
+
       if (this.options.showMinorLabels && showMinorGrid) {
         var label = this._repaintMinorText(x, labelMinor, orientation, className);
         label.style.width = width + 'px'; // set width to prevent overflow
@@ -25324,7 +25406,7 @@ return /******/ (function(modules) { // webpackBootstrap
       } else if (this.options['showMinorLines']) {
         // minor line
         if (showMinorGrid) {
-          line = this._repaintMinorLine(x, width, orientation, className);
+          line = this._repaintMinorLine(x, width, orientation, className, count);
         } else {
           if (line) {
             // adjust the width of the previous grid
@@ -25434,7 +25516,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * @return {Element} Returns the created line
    * @private
    */
-  TimeAxis.prototype._repaintMinorLine = function (x, width, orientation, className) {
+  TimeAxis.prototype._repaintMinorLine = function (x, width, orientation, className, indexColumn) {
     // reuse redundant line
     var line = this.dom.redundant.lines.shift();
     if (!line) {
@@ -25451,7 +25533,7 @@ return /******/ (function(modules) { // webpackBootstrap
       line.style.top = this.body.domProps.top.height + 'px';
     }
     line.style.height = props.minorLineHeight + 'px';
-    line.style.left = x - props.minorLineWidth / 2 + 'px';
+    line.style.left = indexColumn == 1 ? '-' + width / 2 + 'px' : (indexColumn - 1) * width - width / 2 + 'px';
     line.style.width = width + 'px';
 
     line.className = 'vis-grid vis-vertical vis-minor ' + className;
@@ -26447,6 +26529,7 @@ return /******/ (function(modules) { // webpackBootstrap
     max: { date: date, number: number, string: string, moment: moment },
     maxHeight: { number: number, string: string },
     maxMinorChars: { number: number },
+    gap: { number: number },
     min: { date: date, number: number, string: string, moment: moment },
     minHeight: { number: number, string: string },
     moveable: { boolean: boolean },
@@ -27378,6 +27461,9 @@ return /******/ (function(modules) { // webpackBootstrap
       extended.x = util.convert(item.x, 'Date');
       extended.orginalY = item.y; //real Y
       extended.y = Number(item.y);
+      extended.index = item.index;
+      extended.styleLine = item.styleLine;
+      extended.stylePoint = item.stylePoint;
 
       var index = groupsContent[groupId].length - groupCounts[groupId]--;
       groupsContent[groupId][index] = extended;
@@ -27940,10 +28026,45 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   LineGraph.prototype._convertXcoordinates = function (datapoints) {
     var toScreen = this.body.util.toScreen;
+
     for (var i = 0; i < datapoints.length; i++) {
-      datapoints[i].screen_x = toScreen(datapoints[i].x) + this.props.width;
+      datapoints[i].screen_x = toScreen(datapoints[i].x) + this.props.width + this._calculateGapPositionVIS(datapoints[i].x);
       datapoints[i].screen_y = datapoints[i].y; //starting point for range calculations
     }
+  };
+
+  LineGraph.prototype._calculateGapPositionVIS = function (x) {
+    var dateStart = new Date(this.body.range.start);
+    var widthTimeline = document.querySelector('.data-region-timeline').offsetWidth;
+
+    var gap = 0;
+    if (this.body.range.options.gap < .05) gap = 1 / this.body.range.options.gap * .028;else if (this.body.range.options.gap < .1) gap = 1 / this.body.range.options.gap * .15;else if (this.body.range.options.gap < .5) gap = 1 / this.body.range.options.gap * .5;else if (this.body.range.options.gap < 1) gap = 1 / this.body.range.options.gap * 1.15;else if (this.body.range.options.gap == 1) gap = this.body.range.options.gap * 2.45;else if (this.body.range.options.gap == 2) gap = this.body.range.options.gap * .85;else if (this.body.range.options.gap < 5) gap = this.body.range.options.gap * .95;else gap = this.body.range.options.gap * 1.05;
+
+    //width timeline > 1000
+    if (widthTimeline > 1000) {
+      gap = gap + .75;
+      if (gap > 5) gap = gap + 1.75;
+      if (this.body.range.options.gap == 1) gap = 0;
+      gap = Math.round(gap);
+    }
+
+    //width timeline < 800
+    if (widthTimeline < 800) {
+      if (this.body.range.options.gap < .05) gap = gap * .0125;else if (this.body.range.options.gap < 1) gap = gap * .45;
+      if (this.body.range.options.gap > 1) gap = gap + .75;
+      if (gap > 8) gap = gap * .75;
+      if (this.body.range.options.gap == 1) gap = gap * .6;
+    }
+
+    var dateItem = new Date(x);
+    var timeDiff = Math.abs(dateItem.getTime() - dateStart.getTime());
+    var diffHours = parseFloat(timeDiff / (1000 * 60 * 60));
+    var valueDiffWidth = this.props.width / widthTimeline;
+
+    var valueScreenSmall = valueDiffWidth > 1 || widthTimeline < 800 ? 0 : 2.5 * diffHours;
+    valueDiffWidth = this.body.range.options.gap < 1 && widthTimeline < 800 ? valueDiffWidth / gap + this.body.range.options.gap * 2.25 : valueDiffWidth;
+
+    return parseInt(valueDiffWidth * gap * diffHours) + valueScreenSmall;
   };
 
   /**
@@ -27991,6 +28112,7 @@ return /******/ (function(modules) { // webpackBootstrap
   function DataAxis(body, options, svg, linegraphOptions) {
     this.id = util.randomUUID();
     this.body = body;
+    var dataRegionTimeline = document.querySelector('.data-region.data-container-with-timeline');
 
     this.defaultOptions = {
       orientation: 'left', // supported: 'left', 'right'
@@ -28003,7 +28125,7 @@ return /******/ (function(modules) { // webpackBootstrap
       labelOffsetX: 10,
       labelOffsetY: 2,
       iconWidth: 20,
-      width: '40px',
+      width: dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px',
       visible: true,
       alignZeros: true,
       data: undefined,
@@ -28368,7 +28490,7 @@ return /******/ (function(modules) { // webpackBootstrap
     var offset = this.options.icons === true ? Math.max(this.options.iconWidth, titleWidth) + this.options.labelOffsetX + 15 : titleWidth + this.options.labelOffsetX + 15;
 
     // this will resize the yAxis to accommodate the labels.
-    /*if (this.maxLabelSize > this.width - offset && this.options.visible === true) {
+    if (this.maxLabelSize > this.width - offset && this.options.visible === true) {
       this.width = this.maxLabelSize + offset;
       this.options.width = this.width + "px";
       DOMutil.cleanupElements(this.DOMelements.lines);
@@ -28377,8 +28499,7 @@ return /******/ (function(modules) { // webpackBootstrap
       resized = true;
     }
     // this will resize the yAxis if it is too big for the labels.
-    else*/
-	if (this.maxLabelSize < this.width - offset && this.options.visible === true && this.width > this.minWidth) {
+    else if (this.maxLabelSize < this.width - offset && this.options.visible === true && this.width > this.minWidth) {
         this.width = Math.max(this.minWidth, this.maxLabelSize + offset);
         this.options.width = this.width + "px";
         DOMutil.cleanupElements(this.DOMelements.lines);
@@ -28824,6 +28945,7 @@ return /******/ (function(modules) { // webpackBootstrap
     this.usingDefaultStyle = group.className === undefined;
     this.groupsUsingDefaultStyles = groupsUsingDefaultStyles;
     this.zeroPosition = 0;
+    this.summary = group.summary;
     this.update(group);
     if (this.usingDefaultStyle == true) {
       this.groupsUsingDefaultStyles[0] += 1;
@@ -29256,8 +29378,11 @@ return /******/ (function(modules) { // webpackBootstrap
         size: d.prop && d.prop.size ? d.prop.size : 0
       };
       if (!callback) {
+        var itemTrend = null;
+        if (group.id.indexOf("trend") > -1) itemTrend = dataset[i];
+
         // draw the point the simple way.
-        point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data, props);
+        point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, undefined, itemTrend), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data, props);
       } else {
         var callbackResult = callback(dataset[i], group); // result might be true, false or an object
         if (callbackResult === true || (typeof callbackResult === 'undefined' ? 'undefined' : _typeof(callbackResult)) === 'object') {
@@ -29284,11 +29409,12 @@ return /******/ (function(modules) { // webpackBootstrap
     DOMutil.drawPoint(x + 0.5 * iconWidth, y, getGroupTemplate(group), framework.svgElements, framework.svg);
   };
 
-  function getGroupTemplate(group, callbackResult) {
+  function getGroupTemplate(group, callbackResult, itemTrend) {
     callbackResult = typeof callbackResult === 'undefined' ? {} : callbackResult;
+    if (!itemTrend) itemTrend = {};
     return {
       style: callbackResult.style || group.options.drawPoints.style,
-      styles: callbackResult.styles || group.options.drawPoints.styles,
+      styles: itemTrend.stylePoint || callbackResult.styles || group.options.drawPoints.styles,
       size: callbackResult.size || group.options.drawPoints.size,
       height: callbackResult.height || group.options.drawPoints.height,
       width: callbackResult.width || group.options.drawPoints.width,
@@ -30166,6 +30292,7 @@ return /******/ (function(modules) { // webpackBootstrap
         groups = forthArgument;
       }
 
+      var groupNow = null;
       var me = _this;
       _this.rootClass = 'vis-timeline-chart';
       _this.defaultOptions = {
@@ -30237,10 +30364,37 @@ return /******/ (function(modules) { // webpackBootstrap
         me.emit('click', me.getEventProperties(event));
       });
       _this.on('doubletap', function (event) {
-        me.emit('doubleClick', me.getEventProperties(event));
+        var eventProperties = me.getEventProperties(event);
+        eventProperties.snappedTime = this.body.util.toTime(event.changedPointers[0].offsetX - this.props.center.width);
+        eventProperties.group = (this.pointToRow(event.changedPointers[0].offsetY) || {}).value;
+        me.emit('doubleClick', eventProperties);
       });
       _this.dom.root.oncontextmenu = function (event) {
         me.emit('contextmenu', me.getEventProperties(event));
+      };
+      _this.dom.root.onmousemove = function (event) {
+        var eventProperties = me.getEventProperties(event);
+        var groupId = (me.pointToRow(event.offsetY) || {}).value;
+        eventProperties.data = { id: groupId };
+
+        if (groupNow != groupId) {
+          if (groupNow) {
+            var eventPropertiesOld = _.clone(eventProperties);
+            eventPropertiesOld.data = { id: groupNow };
+            me.emit('linemouseout', eventPropertiesOld);
+          }
+
+          if (groupId) {
+            groupNow = groupId;
+            me.emit('linemouseenter', eventProperties);
+          }
+        }
+      };
+      _this.dom.root.onmouseleave = function (event) {
+        var eventProperties = me.getEventProperties(event);
+        eventProperties.data = { id: groupNow };
+        groupNow = null;
+        me.emit('linemouseout', eventProperties);
       };
 
       // apply options
@@ -30264,6 +30418,21 @@ return /******/ (function(modules) { // webpackBootstrap
     }
 
     _createClass(TimelineChart, [{
+      key: 'pointToRow',
+      value: function pointToRow(y) {
+        var totalHeight = 0;
+        var row = null;
+        this.groupsData.forEach(function (d) {
+          if (!d.rowHeightId) return;
+          var maxY = totalHeight + d.rowHeightId[d.className];
+          if (y > totalHeight && y < maxY) {
+            row = d;
+          }
+          totalHeight = maxY;
+        });
+        return row;
+      }
+    }, {
       key: 'setGroups',
       value: function setGroups(groups) {
         // convert to type DataSet when needed
@@ -30504,7 +30673,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
               for (i = 0; i < groupIds.length; i++) {
                 group = _this2.groups[groupIds[i]];
-                if (_this2.options.stack === true && _this2.options.style === 'line') {
+                if (_this2.options.stack === true && (_this2.options.style === 'line' || _this2.options.style === 'trend')) {
                   if (group.options.excludeFromStacking == undefined || !group.options.excludeFromStacking) {
                     if (below != undefined) {
                       _this2._stack(groupsData[group.id], groupsData[below.id]);
@@ -30523,15 +30692,27 @@ return /******/ (function(modules) { // webpackBootstrap
                 }
                 previousY = actualY;
                 actualY += group.group.rowHeightId['tl-groups_' + group.id];
-                _this2._convertYcoordinates(groupsData[groupIds[i]], group, actualY, previousY);
+                if (group.summary) {
+                  var positionY = group.group.rowHeightId['tl-groups_' + group.id];
+                  _this2._convertYcoordinates(groupsData[groupIds[i]], group, positionY * groupIds.length, 0);
+                } else {
+                  _this2._convertYcoordinates(groupsData[groupIds[i]], group, actualY, previousY);
+                }
               }
+
+              //take the max value index of the group
+              var maxIndexGroup = function maxIndexGroup(objectArray) {
+                return objectArray.reduce(function (accumulator, currentValue) {
+                  return accumulator > currentValue ? accumulator : currentValue;
+                });
+              };
 
               //Precalculate paths and draw shading if appropriate. This will make sure the shading is always behind any lines.
               paths = {};
 
               for (i = 0; i < groupIds.length; i++) {
                 group = _this2.groups[groupIds[i]];
-                if (group.options.style === 'line' && group.options.shaded.enabled == true) {
+                if ((group.options.style === 'line' || group.options.style === 'trend') && group.options.shaded.enabled == true) {
                   dataset = groupsData[groupIds[i]];
 
                   if (dataset == null || dataset.length == 0) {
@@ -30552,7 +30733,31 @@ return /******/ (function(modules) { // webpackBootstrap
                     }
                     Lines.drawShading(paths[groupIds[i]], group, paths[subGroupId], _this2.framework);
                   } else {
-                    Lines.drawShading(paths[groupIds[i]], group, undefined, _this2.framework);
+                    if (group.options.style === 'line' && dataset.filter(function (x) {
+                      return x.index !== undefined && x.index !== 0;
+                    }).length > 0) {
+                      var maxIndex = maxIndexGroup(dataset.map(function (x) {
+                        return x.index;
+                      }));
+
+                      var _loop = function _loop(j) {
+                        var groupData = dataset.filter(function (x) {
+                          return x.index == j;
+                        });
+                        delete paths[groupIds[i]];
+
+                        if (!paths.hasOwnProperty(groupIds[i])) {
+                          paths[groupIds[i]] = Lines.calcPath(groupData, group);
+                        }
+                        Lines.drawShading(paths[groupIds[i]], group, undefined, _this2.framework);
+                      };
+
+                      for (var j = 1; j <= maxIndex; j++) {
+                        _loop(j);
+                      }
+                    } else {
+                      Lines.drawShading(paths[groupIds[i]], group, undefined, _this2.framework);
+                    }
                   }
                 }
               }
@@ -30562,24 +30767,56 @@ return /******/ (function(modules) { // webpackBootstrap
               var callbackFunction = function callbackFunction(visEventName, event, element, data) {
                 _this2.body.emitter.emit(visEventName, { data: data, event: event, element: element });
               };
+              var groupsDataFunction = function groupsDataFunction(groupData, groupId) {
+                if (!paths.hasOwnProperty(groupId)) {
+                  paths[groupId] = Lines.calcPath(groupData, group);
+                }
+
+                var itemData = groupData[0];
+                if (itemData && itemData.styleLine) group.style = itemData.styleLine;
+
+                var line = Lines.draw(paths[groupId], group, _this2.framework);
+
+                if (group.group.type === 'line' || group.group.type === 'trend') {
+                  DOMutil.attachEvents(line, 'mouseenter', groupsData[groupId], function (event, element, data) {
+                    return callbackFunction('itemmouseenter', event, element, data);
+                  });
+                  DOMutil.attachEvents(line, 'mouseout', groupsData[groupId], function (event, element, data) {
+                    return callbackFunction('itemmouseout', event, element, data);
+                  });
+                  DOMutil.attachEvents(line, 'click', groupsData[groupId], function (event, element, data) {
+                    return callbackFunction('itemclick', event, element, data);
+                  });
+                }
+              };
               for (i = 0; i < groupIds.length; i++) {
                 group = _this2.groups[groupIds[i]];
                 if (groupsData[groupIds[i]].length > 0) {
                   switch (group.options.style) {
                     case "line":
-                      if (!paths.hasOwnProperty(groupIds[i])) {
-                        paths[groupIds[i]] = Lines.calcPath(groupsData[groupIds[i]], group);
-                      }
+                    case "trend":
+                      {
+                        if (groupsData[groupIds[i]].filter(function (x) {
+                          return x.index !== undefined && x.index !== 0;
+                        }).length > 0) {
+                          var _maxIndex = maxIndexGroup(groupsData[groupIds[i]].map(function (x) {
+                            return x.index;
+                          }));
 
-                      var line = Lines.draw(paths[groupIds[i]], group, _this2.framework);
+                          var _loop2 = function _loop2(j) {
+                            var groupData = groupsData[groupIds[i]].filter(function (x) {
+                              return x.index == j;
+                            });
+                            delete paths[groupIds[i]];
+                            groupsDataFunction(groupData, groupIds[i]);
+                          };
 
-                      if (group.group.type === 'line') {
-                        DOMutil.attachEvents(line, 'mouseenter', groupsData[groupIds[i]], function (event, element, data) {
-                          return callbackFunction('itemmouseenter', event, element, data);
-                        });
-                        DOMutil.attachEvents(line, 'mouseout', groupsData[groupIds[i]], function (event, element, data) {
-                          return callbackFunction('itemmouseout', event, element, data);
-                        });
+                          for (var j = 1; j <= _maxIndex; j++) {
+                            _loop2(j);
+                          }
+                        } else {
+                          groupsDataFunction(groupsData[groupIds[i]], groupIds[i]);
+                        }
                       }
                     //explicit no break;
                     case "point":
@@ -30592,6 +30829,9 @@ return /******/ (function(modules) { // webpackBootstrap
                         });
                         DOMutil.attachEvents(points, 'mouseout', groupsData[groupIds[i]], function (event, element, data) {
                           return callbackFunction('itemmouseout', event, element, data);
+                        });
+                        DOMutil.attachEvents(points, 'click', groupsData[groupIds[i]], function (event, element, data) {
+                          return callbackFunction('itemclick', event, element, data);
                         });
                       }
                       break;
@@ -30809,6 +31049,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
       var _this = _possibleConstructorReturn(this, (TimelineChartDataAxis.__proto__ || Object.getPrototypeOf(TimelineChartDataAxis)).call(this, body, options, svg, linegraphOptions));
 
+      var dataRegionTimeline = document.querySelector('.data-region.data-container-with-timeline');
+
       _this.defaultOptions = {
         orientation: 'left', // supported: 'left', 'right'
         showMinorLabels: true,
@@ -30820,7 +31062,7 @@ return /******/ (function(modules) { // webpackBootstrap
         labelOffsetX: 10,
         labelOffsetY: 2,
         iconWidth: 20,
-        width: '40px',
+        width: dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px',
         visible: true,
         alignZeros: true,
         data: undefined,
@@ -30900,22 +31142,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
         var offsetY = 1;
         var y = offsetY;
+        var summaryGroupBackGround = false;
         for (var keyBg in this.groups) {
           var group = this.groups[keyBg];
-          var previousY = y;
-          y += group.group.rowHeightId['tl-groups_' + group.id];
+          if (group.summary && !summaryGroupBackGround || !group.summary) {
+            var previousY = y;
+            y += group.group.rowHeightId['tl-groups_' + group.id];
 
-          this.drawBackground.renderBackground(previousY - offsetY, y - previousY);
+            this.drawBackground.renderBackground(previousY - offsetY, y - previousY, group.group.value);
+            summaryGroupBackGround = true;
+          }
         }
 
         y = offsetY;
+        var summaryLine = false;
         for (var key in this.groups) {
           var _group = this.groups[key];
-          var _previousY = y;
-          y += _group.group.rowHeightId['tl-groups_' + _group.id];
+          if (_group.summary && !summaryLine || !_group.summary) {
+            var _previousY = y;
+            var rowHeight = _group.group.rowHeightId['tl-groups_' + _group.id];
+            y += rowHeight;
 
-          this.drawLabels.renderLabel(y, orientation, _group, _previousY);
-          this.drawLines.renderLine(y, _group, _previousY);
+            this.drawLabels.renderLabel(y, orientation, _group, _previousY);
+            this.drawLines.renderLine(y, _group, _previousY, rowHeight * Object.keys(this.groups).length + offsetY);
+            summaryLine = true;
+          }
         }
 
         resized = this.verifyResize(orientation);
@@ -31121,8 +31372,11 @@ return /******/ (function(modules) { // webpackBootstrap
     _createClass(DrawLines, [{
       key: 'renderLine',
       value: function renderLine(y, group, previousY) {
+        var heightSummary = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+
         var lineClass = 'vis-grid vis-horizontal vis-timeline-chart-horizontal-line';
 
+        if (group.summary && heightSummary > 0) y = heightSummary;
         this._redrawLine(y, 'left', lineClass, this.props.width, this.props.majorLineWidth + this.props.width);
 
         switch (group.group.type) {
@@ -31219,14 +31473,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
     _createClass(DrawBackground, [{
       key: 'renderBackground',
-      value: function renderBackground(y, height) {
-        this._drawBackgroundDiv(y + this.props.majorLineHeight, this.props.majorLineWidth + this.props.width, height);
+      value: function renderBackground(y, height, groupId) {
+        this._drawBackgroundDiv(y + this.props.majorLineHeight, this.props.majorLineWidth + this.props.width, height, groupId);
       }
     }, {
       key: '_drawBackgroundDiv',
-      value: function _drawBackgroundDiv(y, width, height) {
+      value: function _drawBackgroundDiv(y, width, height, groupId) {
         var background = DOMutil.getDOMElement('div', this.DOMelements.backgrounds, this.dom.lineContainer);
-        background.className = 'vis-timeline-chart-background';
+        background.className = 'vis-timeline-chart-background tl-group__' + groupId;
 
         background.style.width = width + 'px';
         background.style.height = height + 'px';
@@ -31304,7 +31558,7 @@ return /******/ (function(modules) { // webpackBootstrap
       enabled: { boolean: boolean },
       onRender: { 'function': 'function' },
       size: { number: number },
-      style: { string: ['square', 'circle', 'triangle-up', 'triangle-down', 'arrow-avg'] }, // square, circle
+      style: { string: ['square', 'circle', 'trend', 'triangle-up', 'triangle-down', 'arrow-avg'] }, // square, circle
       __type__: { object: object, boolean: boolean, 'function': 'function' }
     },
     dataAxis: {
@@ -31407,6 +31661,7 @@ return /******/ (function(modules) { // webpackBootstrap
     max: { date: date, number: number, string: string, moment: moment },
     maxHeight: { number: number, string: string },
     maxMinorChars: { number: number },
+    gap: { number: number },
     min: { date: date, number: number, string: string, moment: moment },
     minHeight: { number: number, string: string },
     moveable: { boolean: boolean },
