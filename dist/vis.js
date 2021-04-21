@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-03-25
+ * @date    2021-04-21
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -12849,6 +12849,32 @@ return /******/ (function(modules) { // webpackBootstrap
       me.emit('contextmenu', me.getEventProperties(event));
     };
 
+    var groupNow = null;
+    this.dom.root.onmousemove = function (event) {
+      var eventProperties = me.getEventProperties(event);
+      var groupId = eventProperties.group;
+      eventProperties.data = { id: groupId };
+
+      if (groupNow != groupId) {
+        if (groupNow) {
+          var eventPropertiesOld = _.clone(eventProperties);
+          eventPropertiesOld.data = { id: groupNow };
+          me.emit('linemouseout', eventPropertiesOld);
+        }
+
+        if (groupId) {
+          groupNow = groupId;
+          me.emit('linemouseenter', eventProperties);
+        }
+      }
+    };
+    this.dom.root.onmouseleave = function (event) {
+      var eventProperties = me.getEventProperties(event);
+      eventProperties.data = { id: groupNow };
+      groupNow = null;
+      me.emit('linemouseout', eventProperties);
+    };
+
     //Single time autoscale/fit
     this.fitDone = false;
     this.on('changed', function () {
@@ -25533,7 +25559,7 @@ return /******/ (function(modules) { // webpackBootstrap
       line.style.top = this.body.domProps.top.height + 'px';
     }
     line.style.height = props.minorLineHeight + 'px';
-    line.style.left = indexColumn == 1 ? '-' + width / 2 + 'px' : (indexColumn - 1) * width - width / 2 + 'px';
+    line.style.left = indexColumn == 1 ? '-' + width + 'px' : (indexColumn - 1) * width - width + 'px';
     line.style.width = width + 'px';
 
     line.className = 'vis-grid vis-vertical vis-minor ' + className;
@@ -28028,7 +28054,8 @@ return /******/ (function(modules) { // webpackBootstrap
     var toScreen = this.body.util.toScreen;
 
     for (var i = 0; i < datapoints.length; i++) {
-      datapoints[i].screen_x = toScreen(datapoints[i].x) + this.props.width + this._calculateGapPositionVIS(datapoints[i].x);
+      if (this.body.range.options.gap == 0) datapoints[i].screen_x = this.props.width + this._calculateGapPositionVIS(datapoints[i].x);else datapoints[i].screen_x = toScreen(datapoints[i].x) + this.props.width + this._calculateGapPositionVIS(datapoints[i].x);
+
       datapoints[i].screen_y = datapoints[i].y; //starting point for range calculations
     }
   };
@@ -28036,35 +28063,75 @@ return /******/ (function(modules) { // webpackBootstrap
   LineGraph.prototype._calculateGapPositionVIS = function (x) {
     var dateStart = new Date(this.body.range.start);
     var widthTimeline = document.querySelector('.data-region-timeline').offsetWidth;
+    var elementHeaderWidthItem = document.querySelectorAll('.tl-setting-bar__item');
+    var elementHeaderWidth = document.querySelector('.tl-setting-bar');
 
-    var gap = 0;
-    if (this.body.range.options.gap < .05) gap = 1 / this.body.range.options.gap * .028;else if (this.body.range.options.gap < .1) gap = 1 / this.body.range.options.gap * .15;else if (this.body.range.options.gap < .5) gap = 1 / this.body.range.options.gap * .5;else if (this.body.range.options.gap < 1) gap = 1 / this.body.range.options.gap * 1.15;else if (this.body.range.options.gap == 1) gap = this.body.range.options.gap * 2.45;else if (this.body.range.options.gap == 2) gap = this.body.range.options.gap * .85;else if (this.body.range.options.gap < 5) gap = this.body.range.options.gap * .95;else gap = this.body.range.options.gap * 1.05;
+    // calculate when gap === 0 (fit)
+    if (this.body.range.options.gap == 0) {
+      var dateElement = new Date(x);
+      var index = 0;
+      var itemHours = null;
+      // if the hours difference comes negative it calculates with one more day
+      var diffNegative = function diffNegative(dateStart, dateEnd) {
+        var diffFunction = dateStart.diff(dateEnd);
+        if (diffFunction < 1) diffNegative(dateStart.add(1, 'day'), dateEnd);
+        return diffFunction;
+      };
+      // scrolls through the items in the settingbar
+      Object.values(elementHeaderWidth.children).forEach(function (item) {
+        var itemCurrentSplit = item.querySelector('.item-label').innerText.split(':');
+        var hours = itemCurrentSplit[0];
+        var minutes = itemCurrentSplit[1];
+        var diff = 0;
+        if (itemHours) {
+          //calculete difference de hours,
+          diff = moment().hours(hours).minutes(minutes).diff(itemHours);
+          //if diferrence negative, add one more day
+          if (diff < 1) {
+            diff = diffNegative(moment().add(1, 'day').hours(hours).minutes(minutes), itemHours);
+          }
+        }
+        //checks for shorter start times and adds the corresponding index
+        if (dateStart < dateElement) {
+          dateStart = new Date(dateStart.getTime() + diff);
+          if (dateStart < dateElement) index++;
+        }
+        itemHours = moment().hours(hours).minutes(minutes);
+      });
 
-    //width timeline > 1000
-    if (widthTimeline > 1000) {
-      gap = gap + .75;
-      if (gap > 5) gap = gap + 1.75;
-      if (this.body.range.options.gap == 1) gap = 0;
-      gap = Math.round(gap);
+      //multiplies the index with the width of the settingbar item and adds half more width to align correctly
+      var widthElement = parseFloat(elementHeaderWidth.offsetWidth / elementHeaderWidthItem.length).toFixed(2);
+      return widthElement * index + (widthElement / 2 + 1.5);
+    } else {
+      var gap = 0;
+      if (this.body.range.options.gap < .05) gap = 1 / this.body.range.options.gap * .028;else if (this.body.range.options.gap < .1) gap = 1 / this.body.range.options.gap * .15;else if (this.body.range.options.gap < .5) gap = 1 / this.body.range.options.gap * .5;else if (this.body.range.options.gap < 1) gap = 1 / this.body.range.options.gap * 1.15;else if (this.body.range.options.gap == 1) gap = this.body.range.options.gap * 2.45;else if (this.body.range.options.gap == 2) gap = this.body.range.options.gap * .85;else if (this.body.range.options.gap < 5) gap = this.body.range.options.gap * .95;else gap = this.body.range.options.gap * 1.05;
+
+      //width timeline > 1000
+      if (widthTimeline > 1000) {
+        gap = gap + .75;
+        if (gap > 5) gap = gap + 1.75;
+        if (this.body.range.options.gap == 1) gap = 0;
+        gap = Math.round(gap);
+      }
+
+      //width timeline < 800
+      if (widthTimeline < 800) {
+        if (this.body.range.options.gap < .05) gap = gap * .0125;else if (this.body.range.options.gap < 1) gap = gap * .45;
+        if (this.body.range.options.gap > 1) gap = gap + .75;
+        if (gap > 8) gap = gap * .75;
+        if (this.body.range.options.gap == 1) gap = gap * .6;
+      }
+
+      var dateItem = new Date(x);
+      var timeDiff = Math.abs(dateItem.getTime() - dateStart.getTime());
+      var diffHours = parseFloat(timeDiff / (1000 * 60 * 60));
+      var valueDiffWidth = this.props.width / widthTimeline;
+
+      var valueScreenSmall = valueDiffWidth > 1 || widthTimeline < 800 ? 0 : 2.5 * diffHours;
+      valueDiffWidth = this.body.range.options.gap < 1 && widthTimeline < 800 ? valueDiffWidth / gap + this.body.range.options.gap * 2.25 : valueDiffWidth;
+
+      return parseInt(valueDiffWidth * gap * diffHours) + valueScreenSmall;
     }
-
-    //width timeline < 800
-    if (widthTimeline < 800) {
-      if (this.body.range.options.gap < .05) gap = gap * .0125;else if (this.body.range.options.gap < 1) gap = gap * .45;
-      if (this.body.range.options.gap > 1) gap = gap + .75;
-      if (gap > 8) gap = gap * .75;
-      if (this.body.range.options.gap == 1) gap = gap * .6;
-    }
-
-    var dateItem = new Date(x);
-    var timeDiff = Math.abs(dateItem.getTime() - dateStart.getTime());
-    var diffHours = parseFloat(timeDiff / (1000 * 60 * 60));
-    var valueDiffWidth = this.props.width / widthTimeline;
-
-    var valueScreenSmall = valueDiffWidth > 1 || widthTimeline < 800 ? 0 : 2.5 * diffHours;
-    valueDiffWidth = this.body.range.options.gap < 1 && widthTimeline < 800 ? valueDiffWidth / gap + this.body.range.options.gap * 2.25 : valueDiffWidth;
-
-    return parseInt(valueDiffWidth * gap * diffHours) + valueScreenSmall;
   };
 
   /**
@@ -30693,8 +30760,14 @@ return /******/ (function(modules) { // webpackBootstrap
                 previousY = actualY;
                 actualY += group.group.rowHeightId['tl-groups_' + group.id];
                 if (group.summary) {
-                  var positionY = group.group.rowHeightId['tl-groups_' + group.id];
-                  _this2._convertYcoordinates(groupsData[groupIds[i]], group, positionY * groupIds.length, 0);
+                  var ySummary = 0;
+                  for (var s = 0; s < groupIds.length; s++) {
+                    var grupoSummary = _this2.groups[groupIds[s]];
+                    var rowHeightSummary = grupoSummary.group.rowHeightId['tl-groups_' + grupoSummary.id];
+                    ySummary += rowHeightSummary ? rowHeightSummary : 0;
+                  }
+
+                  _this2._convertYcoordinates(groupsData[groupIds[i]], group, ySummary, 0);
                 } else {
                   _this2._convertYcoordinates(groupsData[groupIds[i]], group, actualY, previousY);
                 }
@@ -30744,12 +30817,14 @@ return /******/ (function(modules) { // webpackBootstrap
                         var groupData = dataset.filter(function (x) {
                           return x.index == j;
                         });
-                        delete paths[groupIds[i]];
+                        if (groupData.length > 0) {
+                          delete paths[groupIds[i]];
 
-                        if (!paths.hasOwnProperty(groupIds[i])) {
-                          paths[groupIds[i]] = Lines.calcPath(groupData, group);
+                          if (!paths.hasOwnProperty(groupIds[i])) {
+                            paths[groupIds[i]] = Lines.calcPath(groupData, group);
+                          }
+                          Lines.drawShading(paths[groupIds[i]], group, undefined, _this2.framework);
                         }
-                        Lines.drawShading(paths[groupIds[i]], group, undefined, _this2.framework);
                       };
 
                       for (var j = 1; j <= maxIndex; j++) {
@@ -30807,8 +30882,10 @@ return /******/ (function(modules) { // webpackBootstrap
                             var groupData = groupsData[groupIds[i]].filter(function (x) {
                               return x.index == j;
                             });
-                            delete paths[groupIds[i]];
-                            groupsDataFunction(groupData, groupIds[i]);
+                            if (groupData.length > 0) {
+                              delete paths[groupIds[i]];
+                              groupsDataFunction(groupData, groupIds[i]);
+                            }
                           };
 
                           for (var j = 1; j <= _maxIndex; j++) {
@@ -30935,6 +31012,10 @@ return /******/ (function(modules) { // webpackBootstrap
           max: Math.max.apply(Math, _toConsumableArray(listOfValues)),
           min: Math.min.apply(Math, _toConsumableArray(listOfValues))
         };
+        if (group.summary && listOfValues.length > 0) {
+          range.max = group.group.maxValue;
+          range.min = group.group.minValue;
+        }
 
         for (var i = 0; i < datapoints.length; i++) {
           var convertedValue = 0;
@@ -31159,12 +31240,19 @@ return /******/ (function(modules) { // webpackBootstrap
         for (var key in this.groups) {
           var _group = this.groups[key];
           if (_group.summary && !summaryLine || !_group.summary) {
+            var ySummary = 0;
+            for (var s in this.groups) {
+              var grupoSummary = this.groups[s];
+              var rowHeightSummary = grupoSummary.group.rowHeightId['tl-groups_' + grupoSummary.id];
+              ySummary += rowHeightSummary ? rowHeightSummary : 0;
+            }
+
             var _previousY = y;
             var rowHeight = _group.group.rowHeightId['tl-groups_' + _group.id];
             y += rowHeight;
 
             this.drawLabels.renderLabel(y, orientation, _group, _previousY);
-            this.drawLines.renderLine(y, _group, _previousY, rowHeight * Object.keys(this.groups).length + offsetY);
+            this.drawLines.renderLine(y, _group, _previousY, ySummary);
             summaryLine = true;
           }
         }
