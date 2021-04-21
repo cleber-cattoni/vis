@@ -348,6 +348,11 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
   background-color: #F2F2F2 !important;
 }
 
+.vis-timeline-chart.summary-chart-visualization .vis-data-axis {
+  visibility: hidden;
+}
+
+
 .vis-timeline {
   position: relative;
   border: 1px solid #bfbfbf;
