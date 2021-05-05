@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-04-21
+ * @date    2021-05-05
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -28062,9 +28062,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
   LineGraph.prototype._calculateGapPositionVIS = function (x) {
     var dateStart = new Date(this.body.range.start);
-    var widthTimeline = document.querySelector('.data-region-timeline').offsetWidth;
+    var widthTimeline = document.querySelector('.data-region-timeline') ? document.querySelector('.data-region-timeline').offsetWidth : 0;
     var elementHeaderWidthItem = document.querySelectorAll('.tl-setting-bar__item');
     var elementHeaderWidth = document.querySelector('.tl-setting-bar');
+
+    // where widthTimeline 0 return 0
+    if (widthTimeline == 0) return 0;
 
     // calculate when gap === 0 (fit)
     if (this.body.range.options.gap == 0) {
