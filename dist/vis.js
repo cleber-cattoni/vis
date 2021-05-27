@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-05-26
+ * @date    2021-05-27
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -24582,12 +24582,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
     //mouseover callback method
     this.mouseoverCallback = function (event) {
-      me.emit('mouseover', data);
+      me.emit('mouseover', { data: data, event: event });
     };
 
     //mouseover callback method
     this.mouseoutCallback = function (event) {
-      me.emit('mouseout', data);
+      me.emit('mouseout', { data: data, event: event });
     };
 
     Item.call(this, data, conversion, options);
@@ -29455,11 +29455,11 @@ return /******/ (function(modules) { // webpackBootstrap
         if (group.id.indexOf("trend") > -1) itemTrend = dataset[i];
 
         // draw the point the simple way.
-        point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, undefined, itemTrend), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data, props);
+        point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, undefined, itemTrend), framework.svgElements, framework.svg, dataset[i].label, props);
       } else {
         var callbackResult = callback(dataset[i], group); // result might be true, false or an object
         if (callbackResult === true || (typeof callbackResult === 'undefined' ? 'undefined' : _typeof(callbackResult)) === 'object') {
-          point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, callbackResult), framework.svgElements, framework.svg, dataset[i].label, dataset[i].data, props);
+          point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, callbackResult), framework.svgElements, framework.svg, dataset[i].label, props);
         }
       }
       points.push(point);
