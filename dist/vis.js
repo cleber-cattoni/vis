@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-05-27
+ * @date    2021-06-04
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -17968,9 +17968,9 @@ return /******/ (function(modules) { // webpackBootstrap
       // http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#JavaScript
       /*
        Copyright (c) 2011 Andrei Mackenzie
-         Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-         The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+        The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
        */
 
     }, {
@@ -27190,7 +27190,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
     // data axis
     this.options.dataAxis.orientation = 'left';
-    this.yAxisLeft = new DataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
+    this.yAxisLeft = [];
 
     this.options.dataAxis.orientation = 'right';
     this.yAxisRight = new DataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
@@ -27208,6 +27208,8 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {object} options
    */
   LineGraph.prototype.setOptions = function (options) {
+    var _this = this;
+
     if (options) {
       var fields = ['sampling', 'defaultGroup', 'stack', 'height', 'graphHeight', 'yAxisOrientation', 'style', 'barChart', 'dataAxis', 'sort', 'groups'];
       if (options.graphHeight === undefined && options.height !== undefined) {
@@ -27239,11 +27241,11 @@ return /******/ (function(modules) { // webpackBootstrap
         }
       }
 
-      if (this.yAxisLeft) {
-        if (options.dataAxis !== undefined) {
-          this.yAxisLeft.setOptions(this.options.dataAxis);
-          this.yAxisRight.setOptions(this.options.dataAxis);
-        }
+      if (this.yAxisLeft && options.dataAxis !== undefined) {
+        this.yAxisLeft.forEach(function (y) {
+          return y.setOptions(_this.options.dataAxis);
+        });
+        this.yAxisRight.setOptions(this.options.dataAxis);
       }
 
       if (this.legendLeft) {
@@ -27414,7 +27416,7 @@ return /******/ (function(modules) { // webpackBootstrap
         this.legendRight.removeGroup(groupId);
         this.legendRight.redraw();
       } else {
-        this.yAxisLeft.removeGroup(groupId);
+        this.yAxisLeft[groupId] && this.yAxisLeft[groupId].removeGroup(groupId);
         this.legendLeft.removeGroup(groupId);
         this.legendLeft.redraw();
       }
@@ -27436,7 +27438,7 @@ return /******/ (function(modules) { // webpackBootstrap
         this.yAxisRight.addGroup(groupId, this.groups[groupId]);
         this.legendRight.addGroup(groupId, this.groups[groupId]);
       } else {
-        this.yAxisLeft.addGroup(groupId, this.groups[groupId]);
+        this.yAxisLeft[groupId] && this.yAxisLeft[groupId].addGroup(groupId, this.groups[groupId]);
         this.legendLeft.addGroup(groupId, this.groups[groupId]);
       }
     } else {
@@ -27445,10 +27447,10 @@ return /******/ (function(modules) { // webpackBootstrap
         this.yAxisRight.updateGroup(groupId, this.groups[groupId]);
         this.legendRight.updateGroup(groupId, this.groups[groupId]);
         //If yAxisOrientation changed, clean out the group from the other axis.
-        this.yAxisLeft.removeGroup(groupId);
+        this.yAxisLeft[groupId] && this.yAxisLeft[groupId].removeGroup(groupId);
         this.legendLeft.removeGroup(groupId);
       } else {
-        this.yAxisLeft.updateGroup(groupId, this.groups[groupId]);
+        this.yAxisLeft[groupId] && this.yAxisLeft[groupId].updateGroup(groupId, this.groups[groupId]);
         this.legendLeft.updateGroup(groupId, this.groups[groupId]);
         //If yAxisOrientation changed, clean out the group from the other axis.
         this.yAxisRight.removeGroup(groupId);
@@ -27928,6 +27930,8 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._updateYAxis = function (groupIds, groupRanges) {
+    var _this2 = this;
+
     var resized = false;
     var yAxisLeftUsed = false;
     var yAxisRightUsed = false;
@@ -27969,38 +27973,56 @@ return /******/ (function(modules) { // webpackBootstrap
               minRight = minRight > minVal ? minVal : minRight;
               maxRight = maxRight < maxVal ? maxVal : maxRight;
             }
+
+            if (this.yAxisLeft[groupIds[i]]) {
+              if (yAxisLeftUsed === true) {
+                this.yAxisLeft[groupIds[i]].setRange(minLeft, maxLeft);
+              }
+              resized = this._toggleAxisVisiblity(yAxisLeftUsed, this.yAxisLeft[groupIds[i]]) || resized;
+            }
           }
         }
       }
 
-      if (yAxisLeftUsed == true) {
-        this.yAxisLeft.setRange(minLeft, maxLeft);
-      }
       if (yAxisRightUsed == true) {
         this.yAxisRight.setRange(minRight, maxRight);
       }
     }
-    resized = this._toggleAxisVisiblity(yAxisLeftUsed, this.yAxisLeft) || resized;
     resized = this._toggleAxisVisiblity(yAxisRightUsed, this.yAxisRight) || resized;
 
     if (yAxisRightUsed == true && yAxisLeftUsed == true) {
-      this.yAxisLeft.drawIcons = true;
+      this.yAxisLeft.forEach(function (y) {
+        return y.drawIcons = true;
+      });
       this.yAxisRight.drawIcons = true;
     } else {
-      this.yAxisLeft.drawIcons = false;
+      this.yAxisLeft.forEach(function (y) {
+        return y.drawIcons = false;
+      });
       this.yAxisRight.drawIcons = false;
     }
     this.yAxisRight.master = !yAxisLeftUsed;
-    this.yAxisRight.masterAxis = this.yAxisLeft;
+    /**
+     * TODO: Calc and get masterAxisLeft
+     */
+    if (groupIds[0] && this.yAxisLeft[groupIds[0]]) {
+      this.yAxisRight.masterAxis = this.yAxisLeft[groupIds[0]];
+    }
 
     if (this.yAxisRight.master == false) {
       if (yAxisRightUsed == true) {
-        this.yAxisLeft.lineOffset = this.yAxisRight.width;
+        this.yAxisLeft.forEach(function (y) {
+          return y.lineOffset = _this2.yAxisRight.width;
+        });
       } else {
-        this.yAxisLeft.lineOffset = 0;
+        this.yAxisLeft.forEach(function (y) {
+          return y.lineOffset = 0;
+        });
       }
 
-      resized = this.yAxisLeft.redraw() || resized;
+      for (var _i = 0; _i < groupIds.length && this.yAxisLeft[groupIds[_i]]; _i++) {
+        resized = this.yAxisLeft[groupIds[_i]].redraw() || resized;
+      }
       resized = this.yAxisRight.redraw() || resized;
     } else {
       resized = this.yAxisRight.redraw() || resized;
@@ -28148,7 +28170,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._convertYcoordinates = function (datapoints, group) {
-    var axis = this.yAxisLeft;
+    var axis = this.yAxisLeft[group.id];
     var svgHeight = Number(this.svg.style.height.replace('px', ''));
     if (group.options.yAxisOrientation == 'right') {
       axis = this.yAxisRight;
@@ -30666,7 +30688,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         // data axis
         this.options.dataAxis.orientation = 'left';
-        this.yAxisLeft = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
+        this.yAxisLeft = [];
 
         this.options.dataAxis.orientation = 'right';
         this.yAxisRight = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
@@ -30936,6 +30958,8 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: 'setOptions',
       value: function setOptions(options) {
+        var _this3 = this;
+
         if (options) {
           var fields = ['events', 'height', 'graphHeight', 'style', 'dataAxis', 'groups'];
           if (options.graphHeight === undefined && options.height !== undefined) {
@@ -30954,7 +30978,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
           if (this.yAxisLeft) {
             if (options.dataAxis !== undefined) {
-              this.yAxisLeft.setOptions(this.options.dataAxis);
+              this.yAxisLeft.forEach(function (y) {
+                return y.setOptions(_this3.options.dataAxis);
+              });
               this.yAxisRight.setOptions(this.options.dataAxis);
             }
           }
@@ -30981,11 +31007,13 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: '_updateGroups',
       value: function _updateGroups(groupsContent) {
-        var _this3 = this;
+        var _this4 = this;
 
+        this.yAxisLeft = []; // Clear Axis Left Array
         this.groupsData.forEach(function (group) {
-          _this3._updateGroup(group, group.id);
-          _this3.groups[group.id].setItems(groupsContent[group.id]);
+          _this4._updateYAxisLeft(group);
+          _this4._updateGroup(group, group.id);
+          _this4.groups[group.id].setItems(groupsContent[group.id]);
         });
       }
     }, {
@@ -31025,24 +31053,27 @@ return /******/ (function(modules) { // webpackBootstrap
           if (range.min === range.max) {
             convertedValue = Math.round(baseScreenY * 50 / 100);
           } else {
-            convertedValue = Math.round(axis.convertValue(datapoints[i].y, range, baseScreenY));
+            if (Array.isArray(axis)) {
+              convertedValue = axis[group.id] ? Math.round(axis[group.id].convertValue(datapoints[i].y, range, baseScreenY)) : 0;
+            } else {
+              convertedValue = Math.round(axis.convertValue(datapoints[i].y, range, baseScreenY));
+            }
           }
           datapoints[i].screen_y = actualY - offset / 2 - convertedValue;
         }
         if (range.min === range.max) {
           group.zeroPosition = actualY - offset / 2 - Math.round(baseScreenY * 50 / 100);
         } else {
-          group.zeroPosition = actualY - offset / 2 - Math.round(axis.convertValue(range.min, range, baseScreenY));
+          if (Array.isArray(axis)) {
+            group.zeroPosition = axis[group.id] ? actualY - offset / 2 - Math.round(axis[group.id].convertValue(range.min, range, baseScreenY)) : 0;
+          } else {
+            group.zeroPosition = actualY - offset / 2 - Math.round(axis.convertValue(range.min, range, baseScreenY));
+          }
         }
       }
     }, {
       key: '_convertAvgYcoordinates',
       value: function _convertAvgYcoordinates(datapoints, group, actualY, previousY) {
-        var axis = this.yAxisLeft;
-        if (group.options.yAxisOrientation == 'right') {
-          axis = this.yAxisRight;
-        }
-
         var offset = 10;
         var baseScreenY = actualY - previousY - offset;
         var listOfMaxValues = datapoints.map(function (d) {
@@ -31095,6 +31126,18 @@ return /******/ (function(modules) { // webpackBootstrap
         this.options.height = totalHeight + 1;
         this.options.graphHeight = totalHeight + 1;
         this.options.legend = { enabled: false };
+      }
+
+      /**
+       * Update Axis Left according Group Data
+       * @param group
+       * @private
+       */
+
+    }, {
+      key: '_updateYAxisLeft',
+      value: function _updateYAxisLeft(group) {
+        this.yAxisLeft[group.id] = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
       }
     }]);
 
