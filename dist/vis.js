@@ -20172,9 +20172,6 @@ return /******/ (function(modules) { // webpackBootstrap
           me.props.lastHeight = me.dom.root.offsetHeight;
 
           me.body.emitter.emit('_change');
-          if (me.body.eventOnDrawn && me.body.linkedDataId) {
-            me.body.eventOnDrawn(me.body.linkedDataId, me.body.summaryVisionChart);
-          }
         }
       }
     };
@@ -30353,7 +30350,7 @@ return /******/ (function(modules) { // webpackBootstrap
   var TimelineChart = function (_Core) {
     _inherits(TimelineChart, _Core);
 
-    function TimelineChart(container, items, groups, options, properties) {
+    function TimelineChart(container, items, groups, options) {
       _classCallCheck(this, TimelineChart);
 
       // if the third element is options, the forth is groups (optionally);
@@ -30408,10 +30405,7 @@ return /******/ (function(modules) { // webpackBootstrap
           toGlobalScreen: me._toGlobalScreen.bind(me), // this refers to the root.width
           toTime: me._toTime.bind(me),
           toGlobalTime: me._toGlobalTime.bind(me)
-        },
-        linkedDataId: properties.linkedDataId,
-        eventOnDrawn: properties.events.onDrawn,
-        summaryVisionChart: properties.summaryVisionChart
+        }
       };
 
       // range
