@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-05-27
+ * @date    2021-06-09
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -20032,16 +20032,19 @@ return /******/ (function(modules) { // webpackBootstrap
     this.components.forEach(function (component) {
       resized = component.redraw(timeline) || resized;
     });
-    var MAX_REDRAW = 5;
-    if (resized) {
-      if (this.redrawCount < MAX_REDRAW) {
-        this.body.emitter.emit('_change');
-        return;
+    if (!this.body.reduceRedraw) {
+      // if reduceRedraw true, then dont execute this block
+      var MAX_REDRAW = 5;
+      if (resized) {
+        if (this.redrawCount < MAX_REDRAW) {
+          this.body.emitter.emit('_change');
+          return;
+        } else {
+          console.log('WARNING: infinite loop in redraw?');
+        }
       } else {
-        console.log('WARNING: infinite loop in redraw?');
+        this.redrawCount = 0;
       }
-    } else {
-      this.redrawCount = 0;
     }
     this.initialDrawDone = true;
 
@@ -20172,6 +20175,10 @@ return /******/ (function(modules) { // webpackBootstrap
           me.props.lastHeight = me.dom.root.offsetHeight;
 
           me.body.emitter.emit('_change');
+          if (!me.body.reduceRedraw && me.body.eventOnDrawn) {
+            // if reduceRedraw, then the event should be fired at redraw componente (ie LineGraph.redraw)
+            me.body.eventOnDrawn();
+          }
         }
       }
     };
@@ -23215,8 +23222,8 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   Group.prototype._calculateHeight = function (margin, timeline) {
-    if (timeline != null && timeline.rowHeights != null && timeline.rowHeights[this.className] != null) {
-      return timeline.rowHeights[this.className];
+    if (timeline != null && timeline.rowHeights != null && timeline.rowHeights[this.groupId] != null) {
+      return timeline.rowHeights[this.groupId];
     };
     // recalculate the height of the group
     var height;
@@ -27163,7 +27170,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
       me.forceGraphUpdate = true;
       //Is this local redraw necessary? (Core also does a change event!)
-      me.redraw.call(me);
+      if (!me.body.reduceRedraw) {
+        // just execute if all redraws are executed
+        me.redraw.call(me);
+      }
     });
 
     // create the HTML DOM
@@ -27599,6 +27609,12 @@ return /******/ (function(modules) { // webpackBootstrap
         }
       }
     }
+    if (this.body.reduceRedraw && !resized) {
+      if (this.body.eventOnDrawn) {
+        this.body.eventOnDrawn();
+      }
+    }
+
     this.legendLeft.redraw();
     this.legendRight.redraw();
     return resized;
@@ -30350,7 +30366,7 @@ return /******/ (function(modules) { // webpackBootstrap
   var TimelineChart = function (_Core) {
     _inherits(TimelineChart, _Core);
 
-    function TimelineChart(container, items, groups, options) {
+    function TimelineChart(container, items, groups, options, properties) {
       _classCallCheck(this, TimelineChart);
 
       // if the third element is options, the forth is groups (optionally);
@@ -30407,6 +30423,10 @@ return /******/ (function(modules) { // webpackBootstrap
           toGlobalTime: me._toGlobalTime.bind(me)
         }
       };
+      if (properties) {
+        _this.body.reduceRedraw = properties.reduceRedraw;
+        _this.body.eventOnDrawn = properties.events ? properties.events.onDrawn : null;
+      }
 
       // range
       _this.range = new Range(_this.body);
@@ -31572,6 +31592,7 @@ return /******/ (function(modules) { // webpackBootstrap
       value: function _drawBackgroundDiv(y, width, height, groupId) {
         var background = DOMutil.getDOMElement('div', this.DOMelements.backgrounds, this.dom.lineContainer);
         background.className = 'vis-timeline-chart-background tl-group__' + groupId;
+        background.setAttribute('row-id', groupId);
 
         background.style.width = width + 'px';
         background.style.height = height + 'px';
