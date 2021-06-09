@@ -348,10 +348,6 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
   background-color: #F2F2F2 !important;
 }
 
-.vis-timeline-chart.summary-chart-visualization .vis-data-axis {
-  visibility: hidden;
-}
-
 
 .vis-timeline {
   position: relative;
@@ -403,6 +399,10 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
 
 .vis-panel > .vis-content {
   position: relative;
+}
+
+.vis-panel.vis-left .vis-content {
+  display: flex;
 }
 
 .vis-panel .vis-shadow {

@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-06-05
+ * @date    2021-06-08
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -31009,7 +31009,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         this.yAxisLeft = []; // Clear Axis Left Array
         this.groupsData.forEach(function (group) {
-          _this4._updateYAxisLeft(group);
+          _this4._insertYAxisLeft(group);
           _this4._updateGroup(group, group.id);
           _this4.groups[group.id].setItems(groupsContent[group.id]);
         });
@@ -31133,8 +31133,11 @@ return /******/ (function(modules) { // webpackBootstrap
        */
 
     }, {
-      key: '_updateYAxisLeft',
-      value: function _updateYAxisLeft(group) {
+      key: '_insertYAxisLeft',
+      value: function _insertYAxisLeft(group) {
+        /**
+         * TODO: change .id to .groupingAxisID
+         */
         this.yAxisLeft[group.id] = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
       }
     }]);
