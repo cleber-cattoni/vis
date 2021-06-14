@@ -749,6 +749,9 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
   border-color: #bfbfbf;
 }
 
+.vis-data-axis {
+  position: relative;
+}
 
 .vis-data-axis .vis-y-axis.vis-major {
   width: 100%;
@@ -822,6 +825,10 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
   -ms-transform: rotate(90deg);
   -o-transform: rotate(90deg);
   transform: rotate(90deg);
+}
+
+.vis-data-axis .vis-y-axis.vis-timeline-chart-y-axis{
+  position: absolute;
 }
 
 .vis-legend {
