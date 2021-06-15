@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-06-13
+ * @date    2021-06-15
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -27405,7 +27405,7 @@ return /******/ (function(modules) { // webpackBootstrap
     var _this2 = this;
 
     if (this.groups.hasOwnProperty(groupId)) {
-      if (this.groups[groupId].options.yAxisOrientation == 'right') {
+      if (this.groups[groupId].options.yAxisOrientation === 'right') {
         this.yAxisRight.removeGroup(groupId);
         this.legendRight.removeGroup(groupId);
         this.legendRight.redraw();
@@ -27525,16 +27525,16 @@ return /******/ (function(modules) { // webpackBootstrap
       //Update legendas, style and axis
       for (var groupId in groupsContent) {
         if (groupsContent.hasOwnProperty(groupId)) {
-          if (groupsContent[groupId].length == 0) {
+          if (groupsContent[groupId].length === 0) {
             if (this.groups.hasOwnProperty(groupId)) {
               this._removeGroup(groupId);
             }
           } else {
             var group = undefined;
-            if (this.groupsData != undefined) {
+            if (this.groupsData !== undefined) {
               group = this.groupsData.get(groupId);
             }
-            if (group == undefined) {
+            if (group === undefined) {
               group = { id: groupId, content: this.options.defaultGroup + groupId };
             }
             this._updateGroup(group, groupId);
@@ -27563,24 +27563,24 @@ return /******/ (function(modules) { // webpackBootstrap
 
     // check whether zoomed (in that case we need to re-stack everything)
     var visibleInterval = this.body.range.end - this.body.range.start;
-    var zoomed = visibleInterval != this.lastVisibleInterval;
+    var zoomed = visibleInterval !== this.lastVisibleInterval;
     this.lastVisibleInterval = visibleInterval;
 
     // the svg element is three times as big as the width, this allows for fully dragging left and right
     // without reloading the graph. the controls for this are bound to events in the constructor
-    if (resized == true) {
+    if (resized === true) {
       this.svg.style.width = util.option.asSize(3 * this.props.width);
       this.svg.style.left = util.option.asSize(-this.props.width);
 
       // if the height of the graph is set as proportional, change the height of the svg
-      if ((this.options.height + '').indexOf("%") != -1 || this.updateSVGheightOnResize == true) {
+      if ((this.options.height + '').indexOf("%") !== -1 || this.updateSVGheightOnResize === true) {
         this.updateSVGheight = true;
       }
     }
 
     // update the height of the graph on each redraw of the graph.
-    if (this.updateSVGheight == true) {
-      if (this.options.graphHeight != this.props.height + 'px') {
+    if (this.updateSVGheight === true) {
+      if (this.options.graphHeight !== this.props.height + 'px') {
         this.options.graphHeight = this.props.height + 'px';
         this.svg.style.height = this.props.height + 'px';
       }
@@ -27590,15 +27590,15 @@ return /******/ (function(modules) { // webpackBootstrap
     }
 
     // zoomed is here to ensure that animations are shown correctly.
-    if (resized == true || zoomed == true || this.abortedGraphUpdate == true || this.forceGraphUpdate == true) {
+    if (resized === true || zoomed === true || this.abortedGraphUpdate === true || this.forceGraphUpdate === true) {
       resized = this._updateGraph() || resized;
       this.forceGraphUpdate = false;
     } else {
       // move the whole svg while dragging
-      if (this.lastStart != 0) {
+      if (this.lastStart !== 0) {
         var offset = this.body.range.start - this.lastStart;
         var range = this.body.range.end - this.body.range.start;
-        if (this.props.width != 0) {
+        if (this.props.width !== 0) {
           var rangePerPixelInv = this.props.width / range;
           var xOffset = offset * rangePerPixelInv;
           this.svg.style.left = -this.props.width - xOffset + 'px';
@@ -27616,7 +27616,7 @@ return /******/ (function(modules) { // webpackBootstrap
     for (var groupId in this.groups) {
       if (this.groups.hasOwnProperty(groupId)) {
         var group = this.groups[groupId];
-        if (group.visible == true && (this.options.groups.visibility[groupId] === undefined || this.options.groups.visibility[groupId] == true)) {
+        if (group.visible === true && (this.options.groups.visibility[groupId] === undefined || this.options.groups.visibility[groupId] === true)) {
           grouplist.push({ id: groupId, zIndex: group.options.zIndex });
         }
       }
@@ -27626,7 +27626,7 @@ return /******/ (function(modules) { // webpackBootstrap
       var bz = b.zIndex;
       if (az === undefined) az = 0;
       if (bz === undefined) bz = 0;
-      return az == bz ? 0 : az < bz ? -1 : 1;
+      return az === bz ? 0 : az < bz ? -1 : 1;
     });
     var groupIds = new Array(grouplist.length);
     for (var i = 0; i < grouplist.length; i++) {
@@ -27642,7 +27642,7 @@ return /******/ (function(modules) { // webpackBootstrap
   LineGraph.prototype._updateGraph = function () {
     // reset the svg elements
     DOMutil.prepareElements(this.svgElements);
-    if (this.props.width != 0 && this.itemsData != null) {
+    if (this.props.width !== 0 && this.itemsData != null) {
       var group = void 0,
           i = void 0;
       var groupRanges = {};
@@ -27675,7 +27675,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         //  at changeCalled, abort this update cycle as the graph needs another update with new Width input from the Redraw container.
         //  Cleanup SVG elements on abort.
-        if (changeCalled == true) {
+        if (changeCalled === true) {
           DOMutil.cleanupElements(this.svgElements);
           this.abortedGraphUpdate = true;
           return true;
@@ -27687,11 +27687,11 @@ return /******/ (function(modules) { // webpackBootstrap
         for (i = 0; i < groupIds.length; i++) {
           group = this.groups[groupIds[i]];
           if (this.options.stack === true && this.options.style === 'line') {
-            if (group.options.excludeFromStacking == undefined || !group.options.excludeFromStacking) {
-              if (below != undefined) {
+            if (group.options.excludeFromStacking === undefined || !group.options.excludeFromStacking) {
+              if (below !== undefined) {
                 this._stack(groupsData[group.id], groupsData[below.id]);
-                if (group.options.shaded.enabled == true && group.options.shaded.orientation !== "group") {
-                  if (group.options.shaded.orientation == "top" && below.options.shaded.orientation !== "group") {
+                if (group.options.shaded.enabled === true && group.options.shaded.orientation !== "group") {
+                  if (group.options.shaded.orientation === "top" && below.options.shaded.orientation !== "group") {
                     below.options.shaded.orientation = "group";
                     below.options.shaded.groupId = group.id;
                   } else {
@@ -27710,9 +27710,9 @@ return /******/ (function(modules) { // webpackBootstrap
         var paths = {};
         for (i = 0; i < groupIds.length; i++) {
           group = this.groups[groupIds[i]];
-          if (group.options.style === 'line' && group.options.shaded.enabled == true) {
+          if (group.options.style === 'line' && group.options.shaded.enabled === true) {
             var dataset = groupsData[groupIds[i]];
-            if (dataset == null || dataset.length == 0) {
+            if (dataset == null || dataset.length === 0) {
               continue;
             }
             if (!paths.hasOwnProperty(groupIds[i])) {
@@ -27749,7 +27749,7 @@ return /******/ (function(modules) { // webpackBootstrap
               case "point":
               //explicit no break;
               case "points":
-                if (group.options.style == "point" || group.options.style == "points" || group.options.drawPoints.enabled == true) {
+                if (group.options.style === "point" || group.options.style === "points" || group.options.drawPoints.enabled === true) {
                   Points.draw(groupsData[groupIds[i]], group, this.framework);
                 }
                 break;
@@ -27791,7 +27791,7 @@ return /******/ (function(modules) { // webpackBootstrap
         } else if (subData[k].x > data[j].x) {
           // overshoot
           subNextPoint = subData[k];
-          if (k == 0) {
+          if (k === 0) {
             subPrevPoint = subNextPoint;
           } else {
             subPrevPoint = subData[k - 1];
@@ -27808,7 +27808,7 @@ return /******/ (function(modules) { // webpackBootstrap
       // linear interpolation
       dx = subNextPoint.x - subPrevPoint.x;
       dy = subNextPoint.y - subPrevPoint.y;
-      if (dx == 0) {
+      if (dx === 0) {
         data[j].y = data[j].orginalY + subNextPoint.y;
       } else {
         data[j].y = data[j].orginalY + dy / dx * (data[j].x - subPrevPoint.x) + subPrevPoint.y; // ax + b where b is data[j].y
@@ -27839,9 +27839,9 @@ return /******/ (function(modules) { // webpackBootstrap
         group = this.groups[groupIds[i]];
         var itemsData = group.getItems();
         // optimization for sorted data
-        if (group.options.sort == true) {
+        if (group.options.sort === true) {
           var dateComparator = function dateComparator(a, b) {
-            return a.getTime() == b.getTime() ? 0 : a < b ? -1 : 1;
+            return a.getTime() === b.getTime() ? 0 : a < b ? -1 : 1;
           };
           var first = Math.max(0, util.binarySearchValue(itemsData, minDate, 'x', 'before', dateComparator));
           var last = Math.min(itemsData.length, util.binarySearchValue(itemsData, maxDate, 'x', 'after', dateComparator) + 1);
@@ -27873,7 +27873,7 @@ return /******/ (function(modules) { // webpackBootstrap
     if (groupIds.length > 0) {
       for (var i = 0; i < groupIds.length; i++) {
         group = this.groups[groupIds[i]];
-        if (group.options.sampling == true) {
+        if (group.options.sampling === true) {
           var dataContainer = groupsData[groupIds[i]];
           if (dataContainer.length > 0) {
             var increment = 1;
@@ -28033,7 +28033,7 @@ return /******/ (function(modules) { // webpackBootstrap
       }
 
       for (var _i3 = 0; _i3 < groupIds.length && this.yAxisLeft[groupIds[_i3]]; _i3++) {
-        resized = this.yAxisLeft[groupIds[_i3]].redraw(_i3 === 0) || resized;
+        resized = this.yAxisLeft[groupIds[_i3]].redraw() || resized;
       }
       resized = this.yAxisRight.redraw() || resized;
     } else {
@@ -28043,7 +28043,7 @@ return /******/ (function(modules) { // webpackBootstrap
     // clean the accumulated lists
     var tempGroups = ['__barStackLeft', '__barStackRight', '__lineStackLeft', '__lineStackRight'];
     for (var _i4 = 0; _i4 < tempGroups.length; _i4++) {
-      if (groupIds.indexOf(tempGroups[_i4]) != -1) {
+      if (groupIds.indexOf(tempGroups[_i4]) !== -1) {
         groupIds.splice(groupIds.indexOf(tempGroups[_i4]), 1);
       }
     }
@@ -28061,13 +28061,13 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   LineGraph.prototype._toggleAxisVisiblity = function (axisUsed, axis) {
     var changed = false;
-    if (axisUsed == false) {
-      if (axis.dom.frame.parentNode && axis.hidden == false) {
+    if (axisUsed === false) {
+      if (axis.dom.frame.parentNode && axis.hidden === false) {
         axis.hide();
         changed = true;
       }
     } else {
-      if (!axis.dom.frame.parentNode && axis.hidden == true) {
+      if (!axis.dom.frame.parentNode && axis.hidden === true) {
         axis.show();
         changed = true;
       }
@@ -28088,7 +28088,7 @@ return /******/ (function(modules) { // webpackBootstrap
     var toScreen = this.body.util.toScreen;
 
     for (var i = 0; i < datapoints.length; i++) {
-      if (this.body.range.options.gap == 0) datapoints[i].screen_x = this.props.width + this._calculateGapPositionVIS(datapoints[i].x);else datapoints[i].screen_x = toScreen(datapoints[i].x) + this.props.width + this._calculateGapPositionVIS(datapoints[i].x);
+      if (this.body.range.options.gap === 0) datapoints[i].screen_x = this.props.width + this._calculateGapPositionVIS(datapoints[i].x);else datapoints[i].screen_x = toScreen(datapoints[i].x) + this.props.width + this._calculateGapPositionVIS(datapoints[i].x);
 
       datapoints[i].screen_y = datapoints[i].y; //starting point for range calculations
     }
@@ -28101,10 +28101,10 @@ return /******/ (function(modules) { // webpackBootstrap
     var elementHeaderWidth = document.querySelector('.tl-setting-bar');
 
     // where widthTimeline 0 return 0
-    if (widthTimeline == 0) return 0;
+    if (widthTimeline === 0) return 0;
 
     // calculate when gap === 0 (fit)
-    if (this.body.range.options.gap == 0) {
+    if (this.body.range.options.gap === 0) {
       var dateElement = new Date(x);
       var index = 0;
       var itemHours = null;
@@ -28141,13 +28141,13 @@ return /******/ (function(modules) { // webpackBootstrap
       return widthElement * index + (widthElement / 2 + 1.5);
     } else {
       var gap = 0;
-      if (this.body.range.options.gap < .05) gap = 1 / this.body.range.options.gap * .028;else if (this.body.range.options.gap < .1) gap = 1 / this.body.range.options.gap * .15;else if (this.body.range.options.gap < .5) gap = 1 / this.body.range.options.gap * .5;else if (this.body.range.options.gap < 1) gap = 1 / this.body.range.options.gap * 1.15;else if (this.body.range.options.gap == 1) gap = this.body.range.options.gap * 2.45;else if (this.body.range.options.gap == 2) gap = this.body.range.options.gap * .85;else if (this.body.range.options.gap < 5) gap = this.body.range.options.gap * .95;else gap = this.body.range.options.gap * 1.05;
+      if (this.body.range.options.gap < .05) gap = 1 / this.body.range.options.gap * .028;else if (this.body.range.options.gap < .1) gap = 1 / this.body.range.options.gap * .15;else if (this.body.range.options.gap < .5) gap = 1 / this.body.range.options.gap * .5;else if (this.body.range.options.gap < 1) gap = 1 / this.body.range.options.gap * 1.15;else if (this.body.range.options.gap === 1) gap = this.body.range.options.gap * 2.45;else if (this.body.range.options.gap === 2) gap = this.body.range.options.gap * .85;else if (this.body.range.options.gap < 5) gap = this.body.range.options.gap * .95;else gap = this.body.range.options.gap * 1.05;
 
       //width timeline > 1000
       if (widthTimeline > 1000) {
         gap = gap + .75;
         if (gap > 5) gap = gap + 1.75;
-        if (this.body.range.options.gap == 1) gap = 0;
+        if (this.body.range.options.gap === 1) gap = 0;
         gap = Math.round(gap);
       }
 
@@ -28156,7 +28156,7 @@ return /******/ (function(modules) { // webpackBootstrap
         if (this.body.range.options.gap < .05) gap = gap * .0125;else if (this.body.range.options.gap < 1) gap = gap * .45;
         if (this.body.range.options.gap > 1) gap = gap + .75;
         if (gap > 8) gap = gap * .75;
-        if (this.body.range.options.gap == 1) gap = gap * .6;
+        if (this.body.range.options.gap === 1) gap = gap * .6;
       }
 
       var dateItem = new Date(x);
@@ -28205,6 +28205,7 @@ return /******/ (function(modules) { // webpackBootstrap
   var DOMutil = __webpack_require__(7);
   var Component = __webpack_require__(28);
   var DataScale = __webpack_require__(51);
+
   /**
    * A horizontal time axis
    * @param {Object} [options]        See DataAxis.setOptions for the available
@@ -28320,7 +28321,7 @@ return /******/ (function(modules) { // webpackBootstrap
   DataAxis.prototype.setOptions = function (options) {
     if (options) {
       var redraw = false;
-      if (this.options.orientation != options.orientation && options.orientation !== undefined) {
+      if (this.options.orientation !== options.orientation && options.orientation !== undefined) {
         redraw = true;
       }
       var fields = ['orientation', 'showMinorLabels', 'showMinorLines', 'showMajorLabels', 'icons', 'majorLinesOffset', 'minorLinesOffset', 'labelOffsetX', 'labelOffsetY', 'iconWidth', 'width', 'visible', 'data', 'left', 'right', 'alignZeros'];
@@ -28360,7 +28361,7 @@ return /******/ (function(modules) { // webpackBootstrap
   DataAxis.prototype._redrawGroupIcons = function () {
     DOMutil.prepareElements(this.svgElements);
 
-    var x;
+    var x = void 0;
     var iconWidth = this.options.iconWidth;
     var iconHeight = 15;
     var iconOffset = 4;
@@ -28535,23 +28536,23 @@ return /******/ (function(modules) { // webpackBootstrap
     DOMutil.prepareElements(this.DOMelements.lines);
     DOMutil.prepareElements(this.DOMelements.labels);
     var orientation = this.options['orientation'];
-    var customRange = this.options[orientation].range != undefined ? this.options[orientation].range : {};
+    var customRange = this.options[orientation].range !== undefined ? this.options[orientation].range : {};
 
     //Override range with manual options:
     var autoScaleEnd = true;
-    if (customRange.max != undefined) {
+    if (customRange.max !== undefined) {
       this.range.end = customRange.max;
       autoScaleEnd = false;
     }
     var autoScaleStart = true;
-    if (customRange.min != undefined) {
+    if (customRange.min !== undefined) {
       this.range.start = customRange.min;
       autoScaleStart = false;
     }
 
     this.scale = new DataScale(this.range.start, this.range.end, autoScaleStart, autoScaleEnd, this.dom.frame.offsetHeight, this.props.majorCharHeight, this.options.alignZeros, this.options[orientation].format);
 
-    if (this.master === false && this.masterAxis != undefined) {
+    if (this.master === false && this.masterAxis !== undefined) {
       this.scale.followScale(this.masterAxis.scale);
     }
 
@@ -28679,7 +28680,7 @@ return /******/ (function(modules) { // webpackBootstrap
       }
 
       line.style.width = width + 'px';
-      line.style.top = y + 'px';
+      line.style.top = 71 + 'px';
     }
   };
 
@@ -30481,7 +30482,7 @@ return /******/ (function(modules) { // webpackBootstrap
         var groupId = (me.pointToRow(event.offsetY) || {}).value;
         eventProperties.data = { id: groupId };
 
-        if (groupNow != groupId) {
+        if (groupNow !== groupId) {
           if (groupNow) {
             var eventPropertiesOld = _.clone(eventProperties);
             eventPropertiesOld.data = { id: groupNow };
@@ -30540,7 +30541,7 @@ return /******/ (function(modules) { // webpackBootstrap
       key: 'setGroups',
       value: function setGroups(groups) {
         // convert to type DataSet when needed
-        var newDataSet;
+        var newDataSet = void 0;
         if (!groups) {
           newDataSet = null;
         } else if (groups instanceof DataSet || groups instanceof DataView) {
@@ -30559,7 +30560,7 @@ return /******/ (function(modules) { // webpackBootstrap
         var initialLoad = this.itemsData == null;
 
         // convert to type DataSet when needed
-        var newDataSet;
+        var newDataSet = void 0;
         if (!items) {
           newDataSet = null;
         } else if (items instanceof DataSet || items instanceof DataView) {
@@ -30579,9 +30580,9 @@ return /******/ (function(modules) { // webpackBootstrap
         this.linegraph && this.linegraph.setItems(newDataSet);
 
         if (initialLoad) {
-          if (this.options.start != undefined || this.options.end != undefined) {
-            var start = this.options.start != undefined ? this.options.start : null;
-            var end = this.options.end != undefined ? this.options.end : null;
+          if (this.options.start !== undefined || this.options.end !== undefined) {
+            var start = this.options.start !== undefined ? this.options.start : null;
+            var end = this.options.end !== undefined ? this.options.end : null;
             this.setWindow(start, end, { animation: false });
           } else {
             this.fit({ animation: false });
@@ -30620,7 +30621,7 @@ return /******/ (function(modules) { // webpackBootstrap
         // calculate min from start filed
         for (var groupId in this.linegraph.groups) {
           if (this.linegraph.groups.hasOwnProperty(groupId)) {
-            if (this.linegraph.groups[groupId].visible == true) {
+            if (this.linegraph.groups[groupId].visible === true) {
               for (var i = 0; i < this.linegraph.groups[groupId].itemsData.length; i++) {
                 var item = this.linegraph.groups[groupId].itemsData[i];
                 var value = util.convert(item.x, 'Date').valueOf();
@@ -31218,7 +31219,7 @@ return /******/ (function(modules) { // webpackBootstrap
       value: function setOptions(options) {
         if (options) {
           var redraw = false;
-          if (this.options.orientation != options.orientation && options.orientation !== undefined) {
+          if (this.options.orientation !== options.orientation && options.orientation !== undefined) {
             redraw = true;
           }
           var fields = ['chart', 'orientation', 'showMinorLabels', 'showMinorLines', 'showMajorLabels', 'linesOffsetY', 'linesOffsetX', 'extraLineWidth', 'majorLinesOffset', 'minorLinesOffset', 'labelOffsetX', 'labelOffsetY', 'width', 'visible', 'data', 'left', 'right', 'fontSize'];
@@ -31242,23 +31243,23 @@ return /******/ (function(modules) { // webpackBootstrap
         DOMutil.prepareElements(this.DOMelements.labels);
         DOMutil.prepareElements(this.DOMelements.backgrounds);
 
-        var customRange = this.options[orientation].range != undefined ? this.options[orientation].range : {};
+        var customRange = this.options[orientation].range !== undefined ? this.options[orientation].range : {};
 
         //Override range with manual options:
         var autoScaleEnd = true;
-        if (customRange.max != undefined && !Number.isNaN(customRange.max)) {
+        if (customRange.max !== undefined && !Number.isNaN(customRange.max)) {
           this.range.end = customRange.max;
           autoScaleEnd = false;
         }
         var autoScaleStart = true;
-        if (customRange.min != undefined && !Number.isNaN(customRange.min)) {
+        if (customRange.min !== undefined && !Number.isNaN(customRange.min)) {
           this.range.start = customRange.min;
           autoScaleStart = false;
         }
 
         this.scale = new DataScale(this.range.start, this.range.end, autoScaleStart, autoScaleEnd, this.dom.frame.offsetHeight, this.props.majorCharHeight, this.options.alignZeros, this.options[orientation].format);
 
-        if (this.master === false && this.masterAxis != undefined) {
+        if (this.master === false && this.masterAxis !== undefined) {
           this.scale.followScale(this.masterAxis.scale);
         }
 
