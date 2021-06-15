@@ -28680,7 +28680,7 @@ return /******/ (function(modules) { // webpackBootstrap
       }
 
       line.style.width = width + 'px';
-      line.style.top = 71 + 'px';
+      line.style.top = y + 'px';
     }
   };
 
