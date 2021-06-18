@@ -101,3 +101,23 @@
   white-space: nowrap;
   display: inline-block
 }
+
+.vis-data-axis {
+  position: relative;
+}
+
+.vis-data-axis .vis-y-axis.vis-timeline-chart-y-axis{
+  position: aboslute;
+}
+
+.summary-content.vis-timeline-chart .vis-panel.vis-left .vis-content .vis-data-axis.hovered {
+  background-color: #F2F2F2 !important;
+}
+
+.vis-point.opaque{
+  opacity: 0.3;
+}
+
+.vis-panel.vis-left .vis-content .vis-data-axis .cell.hovered {
+  background-color: #F2F2F2 !important;
+}
