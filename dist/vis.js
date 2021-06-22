@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-06-16
+ * @date    2021-06-18
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -7772,6 +7772,7 @@ return /******/ (function(modules) { // webpackBootstrap
       if (labelObj && labelObj.tooltip) {
         point.setAttributeNS(null, "tooltip", labelObj.tooltip);
       }
+      point.setAttributeNS(null, 'row-id', groupTemplate.rowId);
     });
 
     return points;
@@ -17968,9 +17969,9 @@ return /******/ (function(modules) { // webpackBootstrap
       // http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#JavaScript
       /*
        Copyright (c) 2011 Andrei Mackenzie
-        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-        The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+         Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+         The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
        */
 
     }, {
@@ -20032,16 +20033,19 @@ return /******/ (function(modules) { // webpackBootstrap
     this.components.forEach(function (component) {
       resized = component.redraw(timeline) || resized;
     });
-    var MAX_REDRAW = 5;
-    if (resized) {
-      if (this.redrawCount < MAX_REDRAW) {
-        this.body.emitter.emit('_change');
-        return;
+    if (!this.body.reduceRedraw) {
+      // if reduceRedraw true, then dont execute this block
+      var MAX_REDRAW = 5;
+      if (resized) {
+        if (this.redrawCount < MAX_REDRAW) {
+          this.body.emitter.emit('_change');
+          return;
+        } else {
+          console.log('WARNING: infinite loop in redraw?');
+        }
       } else {
-        console.log('WARNING: infinite loop in redraw?');
+        this.redrawCount = 0;
       }
-    } else {
-      this.redrawCount = 0;
     }
     this.initialDrawDone = true;
 
@@ -20172,6 +20176,10 @@ return /******/ (function(modules) { // webpackBootstrap
           me.props.lastHeight = me.dom.root.offsetHeight;
 
           me.body.emitter.emit('_change');
+          if (!me.body.reduceRedraw && me.body.eventOnDrawn) {
+            // if reduceRedraw, then the event should be fired at redraw componente (ie LineGraph.redraw)
+            me.body.eventOnDrawn();
+          }
         }
       }
     };
@@ -27163,7 +27171,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
       me.forceGraphUpdate = true;
       //Is this local redraw necessary? (Core also does a change event!)
-      me.redraw.call(me);
+      if (!me.body.reduceRedraw) {
+        // just execute if all redraws are executed
+        me.redraw.call(me);
+      }
     });
 
     // create the HTML DOM
@@ -27605,6 +27616,12 @@ return /******/ (function(modules) { // webpackBootstrap
         }
       }
     }
+    if (this.body.reduceRedraw && !resized) {
+      if (this.body.eventOnDrawn) {
+        this.body.eventOnDrawn();
+      }
+    }
+
     this.legendLeft.redraw();
     this.legendRight.redraw();
     return resized;
@@ -28033,7 +28050,7 @@ return /******/ (function(modules) { // webpackBootstrap
       }
 
       for (var _i3 = 0; _i3 < groupIds.length && this.yAxisLeft[groupIds[_i3]]; _i3++) {
-        resized = this.yAxisLeft[groupIds[_i3]].redraw() || resized;
+        resized = this.yAxisLeft[groupIds[_i3]].redraw(_i3, groupIds[_i3]) || resized;
       }
       resized = this.yAxisRight.redraw() || resized;
     } else {
@@ -28445,9 +28462,10 @@ return /******/ (function(modules) { // webpackBootstrap
    * Repaint the component
    * @return {boolean} Returns true if the component is resized
    */
-  DataAxis.prototype.redraw = function () {
+  DataAxis.prototype.redraw = function (index, groupName) {
     var resized = false;
     var activeGroups = 0;
+    var id = void 0;
 
     // Make sure the line container adheres to the vertical scrolling.
     this.dom.lineContainer.style.top = this.body.domProps.scrollTop + 'px';
@@ -28456,9 +28474,15 @@ return /******/ (function(modules) { // webpackBootstrap
       if (this.groups.hasOwnProperty(groupId)) {
         if (this.groups[groupId].visible === true && (this.linegraphOptions.visibility[groupId] === undefined || this.linegraphOptions.visibility[groupId] === true)) {
           activeGroups++;
+          id = this.groups[groupId].group.value;
         }
       }
     }
+
+    if (groupName) {
+      id = this.groups[groupName].group.value;
+    }
+
     if (this.amountOfGroups === 0 || activeGroups === 0) {
       this.hide();
     } else {
@@ -28474,6 +28498,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
       // update classname
       frame.className = 'vis-data-axis';
+      frame.setAttribute('row-id', id);
+      frame.setAttribute('index', index);
 
       // calculate character width and height
       this._calculateCharSize();
@@ -29524,7 +29550,8 @@ return /******/ (function(modules) { // webpackBootstrap
       height: callbackResult.height || group.options.drawPoints.height,
       width: callbackResult.width || group.options.drawPoints.width,
       props: callbackResult.props || group.group.props,
-      className: callbackResult.className || group.className
+      className: callbackResult.className || group.className,
+      rowId: group.group.value
     };
   }
 
@@ -29667,6 +29694,7 @@ return /******/ (function(modules) { // webpackBootstrap
           }
           // copy properties to path for drawing.
           path.setAttributeNS(null, 'd', 'M' + pathArray[0][0] + "," + pathArray[0][1] + " " + this.serializePath(pathArray, type, false));
+          path.setAttributeNS(null, 'row-id', group.group.value);
       }
       return path;
   };
@@ -30385,7 +30413,7 @@ return /******/ (function(modules) { // webpackBootstrap
   var TimelineChart = function (_Core) {
     _inherits(TimelineChart, _Core);
 
-    function TimelineChart(container, items, groups, options) {
+    function TimelineChart(container, items, groups, options, properties) {
       _classCallCheck(this, TimelineChart);
 
       // if the third element is options, the forth is groups (optionally);
@@ -30442,6 +30470,10 @@ return /******/ (function(modules) { // webpackBootstrap
           toGlobalTime: me._toGlobalTime.bind(me)
         }
       };
+      if (properties) {
+        _this.body.reduceRedraw = properties.reduceRedraw;
+        _this.body.eventOnDrawn = properties.events ? properties.events.onDrawn : null;
+      }
 
       // range
       _this.range = new Range(_this.body);
@@ -31604,6 +31636,7 @@ return /******/ (function(modules) { // webpackBootstrap
       value: function _drawBackgroundDiv(y, width, height, groupId) {
         var background = DOMutil.getDOMElement('div', this.DOMelements.backgrounds, this.dom.lineContainer);
         background.className = 'vis-timeline-chart-background tl-group__' + groupId;
+        background.setAttribute('row-id', groupId);
 
         background.style.width = width + 'px';
         background.style.height = height + 'px';
