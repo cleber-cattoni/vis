@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-06-22
+ * @date    2021-06-23
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -28466,6 +28466,7 @@ return /******/ (function(modules) { // webpackBootstrap
     var resized = false;
     var activeGroups = 0;
     var id = void 0;
+    var styleParam = {};
 
     // Make sure the line container adheres to the vertical scrolling.
     this.dom.lineContainer.style.top = this.body.domProps.scrollTop + 'px';
@@ -28481,6 +28482,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
     if (groupName) {
       id = this.groups[groupName].group.value;
+      styleParam = this.groups[groupName].group.styleAxis;
     }
 
     if (this.amountOfGroups === 0 || activeGroups === 0) {
@@ -28519,7 +28521,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
       //  take frame offline while updating (is almost twice as fast)
       if (orientation === 'left') {
-        frame.style.top = '0';
         frame.style.left = '0';
         frame.style.bottom = '';
         frame.style.width = this.width + 'px';
@@ -28536,6 +28537,11 @@ return /******/ (function(modules) { // webpackBootstrap
         this.props.width = this.body.domProps.right.width;
         this.props.height = this.body.domProps.right.height;
       }
+
+      // Set style params to frame style
+      Object.keys(styleParam).forEach(function (key) {
+        frame.style[key] = styleParam[key];
+      });
 
       resized = this._redrawLabels();
       resized = this._isResized() || resized;
@@ -31162,9 +31168,6 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: '_insertYAxisLeft',
       value: function _insertYAxisLeft(group) {
-        /**
-         * TODO: change .id to .groupingAxisID
-         */
         this.yAxisLeft[group.id] = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
       }
     }]);
