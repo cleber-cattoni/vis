@@ -6,10 +6,14 @@
  *
  * @version 4.15.4
 <<<<<<< HEAD
+<<<<<<< HEAD
  * @date    2021-06-11
 =======
  * @date    2021-06-16
 >>>>>>> 1f71de7c05198be8e76a25d6731e36bc984f2684
+=======
+ * @date    2021-06-23
+>>>>>>> 733d7af7db2a61616993a2855102b2ecdf64e1ba
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -7776,6 +7780,7 @@ return /******/ (function(modules) { // webpackBootstrap
       if (labelObj && labelObj.tooltip) {
         point.setAttributeNS(null, "tooltip", labelObj.tooltip);
       }
+      point.setAttributeNS(null, 'row-id', groupTemplate.rowId);
     });
 
     return points;
@@ -17972,9 +17977,9 @@ return /******/ (function(modules) { // webpackBootstrap
       // http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#JavaScript
       /*
        Copyright (c) 2011 Andrei Mackenzie
-         Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-         The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+        The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
        */
 
     }, {
@@ -28053,7 +28058,7 @@ return /******/ (function(modules) { // webpackBootstrap
       }
 
       for (var _i3 = 0; _i3 < groupIds.length && this.yAxisLeft[groupIds[_i3]]; _i3++) {
-        resized = this.yAxisLeft[groupIds[_i3]].redraw() || resized;
+        resized = this.yAxisLeft[groupIds[_i3]].redraw(_i3, groupIds[_i3]) || resized;
       }
       resized = this.yAxisRight.redraw() || resized;
     } else {
@@ -28465,9 +28470,11 @@ return /******/ (function(modules) { // webpackBootstrap
    * Repaint the component
    * @return {boolean} Returns true if the component is resized
    */
-  DataAxis.prototype.redraw = function () {
+  DataAxis.prototype.redraw = function (index, groupName) {
     var resized = false;
     var activeGroups = 0;
+    var id = void 0;
+    var styleParam = {};
 
     // Make sure the line container adheres to the vertical scrolling.
     this.dom.lineContainer.style.top = this.body.domProps.scrollTop + 'px';
@@ -28476,9 +28483,16 @@ return /******/ (function(modules) { // webpackBootstrap
       if (this.groups.hasOwnProperty(groupId)) {
         if (this.groups[groupId].visible === true && (this.linegraphOptions.visibility[groupId] === undefined || this.linegraphOptions.visibility[groupId] === true)) {
           activeGroups++;
+          id = this.groups[groupId].group.value;
         }
       }
     }
+
+    if (groupName) {
+      id = this.groups[groupName].group.value;
+      styleParam = this.groups[groupName].group.styleAxis;
+    }
+
     if (this.amountOfGroups === 0 || activeGroups === 0) {
       this.hide();
     } else {
@@ -28494,6 +28508,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
       // update classname
       frame.className = 'vis-data-axis';
+      frame.setAttribute('row-id', id);
+      frame.setAttribute('index', index);
 
       // calculate character width and height
       this._calculateCharSize();
@@ -28513,7 +28529,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
       //  take frame offline while updating (is almost twice as fast)
       if (orientation === 'left') {
-        frame.style.top = '0';
         frame.style.left = '0';
         frame.style.bottom = '';
         frame.style.width = this.width + 'px';
@@ -28530,6 +28545,11 @@ return /******/ (function(modules) { // webpackBootstrap
         this.props.width = this.body.domProps.right.width;
         this.props.height = this.body.domProps.right.height;
       }
+
+      // Set style params to frame style
+      Object.keys(styleParam).forEach(function (key) {
+        frame.style[key] = styleParam[key];
+      });
 
       resized = this._redrawLabels();
       resized = this._isResized() || resized;
@@ -29544,7 +29564,8 @@ return /******/ (function(modules) { // webpackBootstrap
       height: callbackResult.height || group.options.drawPoints.height,
       width: callbackResult.width || group.options.drawPoints.width,
       props: callbackResult.props || group.group.props,
-      className: callbackResult.className || group.className
+      className: callbackResult.className || group.className,
+      rowId: group.group.value
     };
   }
 
@@ -29687,6 +29708,7 @@ return /******/ (function(modules) { // webpackBootstrap
           }
           // copy properties to path for drawing.
           path.setAttributeNS(null, 'd', 'M' + pathArray[0][0] + "," + pathArray[0][1] + " " + this.serializePath(pathArray, type, false));
+          path.setAttributeNS(null, 'row-id', group.group.value);
       }
       return path;
   };
@@ -31154,9 +31176,6 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: '_insertYAxisLeft',
       value: function _insertYAxisLeft(group) {
-        /**
-         * TODO: change .id to .groupingAxisID
-         */
         this.yAxisLeft[group.id] = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
       }
     }]);
