@@ -125,6 +125,10 @@
   opacity: 0.3;
 }
 
+path.opaque {
+  stroke-opacity: 0.3;
+}
+
 .vis-panel.vis-left .vis-content .vis-data-axis .cell.hovered {
   background-color: #F2F2F2 !important;
 }
