@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-06-27
+ * @date    2021-07-04
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -31467,28 +31467,34 @@ return /******/ (function(modules) { // webpackBootstrap
       }
     }, {
       key: '_renderLineLabel',
-      value: function _renderLineLabel(y, previousY, orientation, labelClass, group) {
+      value: function _renderLineLabel(lineHeight, previousY, orientation, labelClass, group) {
         var values = group.itemsData.map(function (item) {
           return item.y;
         });
+        if (values.length === 0) {
+          return; // exit
+        }
+        var maxValue = Math.max.apply(Math, _toConsumableArray(values));
+        var minValue = Math.min.apply(Math, _toConsumableArray(values));
+
+        if (group.summary && group.group && group.group.intervalScale) {
+          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue });
+          return; // exit
+        }
+
         var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
 
-        if (values.length > 0) {
-          var maxValue = Math.max.apply(Math, _toConsumableArray(values));
-          var minValue = Math.min.apply(Math, _toConsumableArray(values));
+        var _getSupportLabels4 = this._getSupportLabels(lineHeight, previousY, this.options.fontSize),
+            topLabelY = _getSupportLabels4.topLabelY,
+            middleLabelY = _getSupportLabels4.middleLabelY,
+            bottomLabelY = _getSupportLabels4.bottomLabelY;
 
-          var _getSupportLabels4 = this._getSupportLabels(y, previousY, this.options.fontSize),
-              topLabelY = _getSupportLabels4.topLabelY,
-              middleLabelY = _getSupportLabels4.middleLabelY,
-              bottomLabelY = _getSupportLabels4.bottomLabelY;
-
-          if (maxValue === minValue || avgValue) {
-            var label = avgValue !== undefined ? avgValue : maxValue;
-            this._redrawLabel(y - middleLabelY, label, orientation, labelClass, this.props.minorCharHeight);
-          } else {
-            this._redrawLabel(y - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
-            this._redrawLabel(y - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
-          }
+        if (maxValue === minValue || avgValue) {
+          var label = avgValue !== undefined ? avgValue : maxValue;
+          this._redrawLabel(lineHeight - middleLabelY, label, orientation, labelClass, this.props.minorCharHeight);
+        } else {
+          this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
+          this._redrawLabel(lineHeight - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
         }
       }
     }, {
@@ -31501,6 +31507,46 @@ return /******/ (function(modules) { // webpackBootstrap
         var bottomLabelY = size * 15 / 100 + labelOffsetY;
 
         return { topLabelY: topLabelY, middleLabelY: middleLabelY, bottomLabelY: bottomLabelY };
+      }
+    }, {
+      key: '_renderLineLabelWithScale',
+      value: function _renderLineLabelWithScale(_ref) {
+        var lineHeight = _ref.lineHeight,
+            orientation = _ref.orientation,
+            labelClass = _ref.labelClass,
+            group = _ref.group,
+            maxValue = _ref.maxValue,
+            minValue = _ref.minValue;
+
+        var labelHeight = 10;
+        var internHeight = lineHeight - labelHeight * 2;
+        var offset = labelHeight / 2;
+        var amountLabelsToFit = Math.floor(internHeight / labelHeight);
+        var intervalScale = group.group.intervalScale;
+        var amountLabels = Math.floor((maxValue - minValue) / intervalScale) - 1; // Remove one that is max label
+        var position = lineHeight - offset;
+        var label = minValue;
+
+        // Divides the number of labels to fit the available height
+        while (amountLabels > amountLabelsToFit) {
+          amountLabels = Math.floor((amountLabels - 1) / 2);
+          intervalScale += intervalScale;
+        }
+
+        // Displays a max label aligned on the top
+        this._redrawLabel(offset, maxValue, orientation, labelClass, this.props.minorCharHeight);
+
+        // Displays a min label aligned in the footer
+        this._redrawLabel(position, minValue, orientation, labelClass, this.props.minorCharHeight);
+
+        // Calc internal height for number of occurrences
+        var averageHeightAvailable = (internHeight - amountLabels * labelHeight) / (amountLabels + 1);
+
+        for (var i = 0; i < amountLabels && amountLabelsToFit > 0; i++) {
+          label += intervalScale;
+          position -= averageHeightAvailable + labelHeight;
+          this._redrawLabel(position, label, orientation, labelClass, this.props.minorCharHeight);
+        }
       }
     }]);
 
