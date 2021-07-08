@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
  * @date    2021-06-11
 =======
  * @date    2021-06-16
@@ -18,6 +19,9 @@
 =======
  * @date    2021-07-04
 >>>>>>> bffb20c9bab3f72991c9d10bedd8fb4cf28fe7d8
+=======
+ * @date    2021-07-08
+>>>>>>> c2be89b0700abd1e7348dfd1bac9631ff98538db
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -28478,6 +28482,7 @@ return /******/ (function(modules) { // webpackBootstrap
     var resized = false;
     var activeGroups = 0;
     var id = void 0;
+    var groupingAxisID = '';
     var styleParam = {};
 
     // Make sure the line container adheres to the vertical scrolling.
@@ -28496,6 +28501,9 @@ return /******/ (function(modules) { // webpackBootstrap
       id = this.groups[groupName].group.value;
       if (this.groups[groupName].group.styleAxis) {
         styleParam = this.groups[groupName].group.styleAxis;
+      }
+      if (this.groups[groupName].group.groupingAxisID) {
+        groupingAxisID = this.groups[groupName].group.groupingAxisID;
       }
     }
 
@@ -28516,6 +28524,7 @@ return /******/ (function(modules) { // webpackBootstrap
       frame.className = 'vis-data-axis';
       frame.setAttribute('row-id', id);
       frame.setAttribute('index', index);
+      frame.setAttribute('grouping-axis-id', groupingAxisID);
 
       // calculate character width and height
       this._calculateCharSize();
@@ -31431,51 +31440,32 @@ return /******/ (function(modules) { // webpackBootstrap
       }
     }, {
       key: '_renderArrowAvgLabel',
-      value: function _renderArrowAvgLabel(y, previousY, orientation, labelClass, group) {
-        if (group.itemsData && group.itemsData.length > 0) {
-          var listOfMaxValues = group.itemsData.map(function (item) {
-            return item.maxValue;
-          });
-          var listOfMinValues = group.itemsData.map(function (item) {
-            return item.minValue;
-          });
-          var maxValue = Math.max.apply(Math, _toConsumableArray(listOfMaxValues));
-          var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
-          var minValue = Math.min.apply(Math, _toConsumableArray(listOfMinValues));
-
-          var _getSupportLabels2 = this._getSupportLabels(y, previousY),
-              topLabelY = _getSupportLabels2.topLabelY,
-              middleLabelY = _getSupportLabels2.middleLabelY,
-              bottomLabelY = _getSupportLabels2.bottomLabelY;
-
-          this._redrawLabel(y - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
-          this._redrawLabel(y - middleLabelY, avgValue, orientation, labelClass, this.props.minorCharHeight);
-          this._redrawLabel(y - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
+      value: function _renderArrowAvgLabel(lineHeight, previousY, orientation, labelClass, group) {
+        if (!group.itemsData || group.itemsData.length === 0) {
+          return; // exit
         }
-      }
-    }, {
-      key: '_renderCircleLabel',
-      value: function _renderCircleLabel(y, previousY, orientation, labelClass, group) {
-        var values = group.itemsData.map(function (item) {
-          return item.y;
-        });
+        var maxValue = Math.max.apply(Math, group.itemsData.map(function (item) {
+          return item.maxValue;
+        }));
+        var minValue = Math.min.apply(Math, group.itemsData.map(function (item) {
+          return item.minValue;
+        }));
 
-        if (values.length > 0) {
-          var maxValue = Math.max.apply(Math, _toConsumableArray(values));
-          var minValue = Math.min.apply(Math, _toConsumableArray(values));
-
-          var _getSupportLabels3 = this._getSupportLabels(y, previousY),
-              topLabelY = _getSupportLabels3.topLabelY,
-              middleLabelY = _getSupportLabels3.middleLabelY,
-              bottomLabelY = _getSupportLabels3.bottomLabelY;
-
-          if (maxValue === minValue) {
-            this._redrawLabel(y - middleLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
-          } else {
-            this._redrawLabel(y - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
-            this._redrawLabel(y - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
-          }
+        if (group.summary && group.group && group.group.intervalScale) {
+          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue });
+          return; // exit
         }
+
+        var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
+
+        var _getSupportLabels2 = this._getSupportLabels(lineHeight, previousY),
+            topLabelY = _getSupportLabels2.topLabelY,
+            middleLabelY = _getSupportLabels2.middleLabelY,
+            bottomLabelY = _getSupportLabels2.bottomLabelY;
+
+        this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
+        this._redrawLabel(lineHeight - middleLabelY, avgValue, orientation, labelClass, this.props.minorCharHeight);
+        this._redrawLabel(lineHeight - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
       }
     }, {
       key: '_renderLineLabel',
@@ -31496,10 +31486,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
         var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
 
-        var _getSupportLabels4 = this._getSupportLabels(lineHeight, previousY, this.options.fontSize),
-            topLabelY = _getSupportLabels4.topLabelY,
-            middleLabelY = _getSupportLabels4.middleLabelY,
-            bottomLabelY = _getSupportLabels4.bottomLabelY;
+        var _getSupportLabels3 = this._getSupportLabels(lineHeight, previousY, this.options.fontSize),
+            topLabelY = _getSupportLabels3.topLabelY,
+            middleLabelY = _getSupportLabels3.middleLabelY,
+            bottomLabelY = _getSupportLabels3.bottomLabelY;
 
         if (maxValue === minValue || avgValue) {
           var label = avgValue !== undefined ? avgValue : maxValue;
