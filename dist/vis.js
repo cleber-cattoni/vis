@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-07-04
+ * @date    2021-07-06
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -28466,6 +28466,7 @@ return /******/ (function(modules) { // webpackBootstrap
     var resized = false;
     var activeGroups = 0;
     var id = void 0;
+    var groupingAxisID = '';
     var styleParam = {};
 
     // Make sure the line container adheres to the vertical scrolling.
@@ -28484,6 +28485,9 @@ return /******/ (function(modules) { // webpackBootstrap
       id = this.groups[groupName].group.value;
       if (this.groups[groupName].group.styleAxis) {
         styleParam = this.groups[groupName].group.styleAxis;
+      }
+      if (this.groups[groupName].group.groupingAxisID) {
+        groupingAxisID = this.groups[groupName].group.groupingAxisID;
       }
     }
 
@@ -28504,6 +28508,7 @@ return /******/ (function(modules) { // webpackBootstrap
       frame.className = 'vis-data-axis';
       frame.setAttribute('row-id', id);
       frame.setAttribute('index', index);
+      frame.setAttribute('grouping-axis-id', groupingAxisID);
 
       // calculate character width and height
       this._calculateCharSize();
