@@ -5,23 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
- * @date    2021-06-11
-=======
- * @date    2021-06-16
->>>>>>> 1f71de7c05198be8e76a25d6731e36bc984f2684
-=======
- * @date    2021-06-23
->>>>>>> 733d7af7db2a61616993a2855102b2ecdf64e1ba
-=======
- * @date    2021-07-04
->>>>>>> bffb20c9bab3f72991c9d10bedd8fb4cf28fe7d8
-=======
- * @date    2021-07-08
->>>>>>> c2be89b0700abd1e7348dfd1bac9631ff98538db
+ * @date    2021-06-09
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -7788,7 +7772,6 @@ return /******/ (function(modules) { // webpackBootstrap
       if (labelObj && labelObj.tooltip) {
         point.setAttributeNS(null, "tooltip", labelObj.tooltip);
       }
-      point.setAttributeNS(null, 'row-id', groupTemplate.rowId);
     });
 
     return points;
@@ -17985,9 +17968,9 @@ return /******/ (function(modules) { // webpackBootstrap
       // http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#JavaScript
       /*
        Copyright (c) 2011 Andrei Mackenzie
-        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-        The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+         Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+         The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
        */
 
     }, {
@@ -27217,7 +27200,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
     // data axis
     this.options.dataAxis.orientation = 'left';
-    this.yAxisLeft = [];
+    this.yAxisLeft = new DataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
 
     this.options.dataAxis.orientation = 'right';
     this.yAxisRight = new DataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
@@ -27235,15 +27218,15 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {object} options
    */
   LineGraph.prototype.setOptions = function (options) {
-    var _this = this;
-
     if (options) {
       var fields = ['sampling', 'defaultGroup', 'stack', 'height', 'graphHeight', 'yAxisOrientation', 'style', 'barChart', 'dataAxis', 'sort', 'groups'];
       if (options.graphHeight === undefined && options.height !== undefined) {
         this.updateSVGheight = true;
         this.updateSVGheightOnResize = true;
-      } else if (this.body.domProps.centerContainer.height !== undefined && options.graphHeight !== undefined && parseInt((options.graphHeight + '').replace("px", '')) < this.body.domProps.centerContainer.height) {
-        this.updateSVGheight = true;
+      } else if (this.body.domProps.centerContainer.height !== undefined && options.graphHeight !== undefined) {
+        if (parseInt((options.graphHeight + '').replace("px", '')) < this.body.domProps.centerContainer.height) {
+          this.updateSVGheight = true;
+        }
       }
       util.selectiveDeepExtend(fields, this.options, options);
       util.mergeOptions(this.options, options, 'interpolation');
@@ -27251,27 +27234,33 @@ return /******/ (function(modules) { // webpackBootstrap
       util.mergeOptions(this.options, options, 'shaded');
       util.mergeOptions(this.options, options, 'legend');
 
-      if (options.interpolation && _typeof(options.interpolation) == 'object' && options.interpolation.parametrization) {
-        if (options.interpolation.parametrization === 'uniform') {
-          this.options.interpolation.alpha = 0;
-        } else if (options.interpolation.parametrization === 'chordal') {
-          this.options.interpolation.alpha = 1.0;
-        } else {
-          this.options.interpolation.parametrization = 'centripetal';
-          this.options.interpolation.alpha = 0.5;
+      if (options.interpolation) {
+        if (_typeof(options.interpolation) == 'object') {
+          if (options.interpolation.parametrization) {
+            if (options.interpolation.parametrization == 'uniform') {
+              this.options.interpolation.alpha = 0;
+            } else if (options.interpolation.parametrization == 'chordal') {
+              this.options.interpolation.alpha = 1.0;
+            } else {
+              this.options.interpolation.parametrization = 'centripetal';
+              this.options.interpolation.alpha = 0.5;
+            }
+          }
         }
       }
 
-      if (this.yAxisLeft && options.dataAxis !== undefined) {
-        Object.keys(this.yAxisLeft).forEach(function (i) {
-          return _this.yAxisLeft[i].setOptions(_this.options.dataAxis);
-        });
-        this.yAxisRight.setOptions(this.options.dataAxis);
+      if (this.yAxisLeft) {
+        if (options.dataAxis !== undefined) {
+          this.yAxisLeft.setOptions(this.options.dataAxis);
+          this.yAxisRight.setOptions(this.options.dataAxis);
+        }
       }
 
-      if (this.legendLeft && options.legend !== undefined) {
-        this.legendLeft.setOptions(this.options.legend);
-        this.legendRight.setOptions(this.options.legend);
+      if (this.legendLeft) {
+        if (options.legend !== undefined) {
+          this.legendLeft.setOptions(this.options.legend);
+          this.legendRight.setOptions(this.options.legend);
+        }
       }
 
       if (this.groups.hasOwnProperty(UNGROUPED)) {
@@ -27313,9 +27302,9 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {vis.DataSet | null} items
    */
   LineGraph.prototype.setItems = function (items) {
-    var me = this;
-    var ids = void 0;
-    var oldItemsData = this.itemsData;
+    var me = this,
+        ids,
+        oldItemsData = this.itemsData;
 
     // replace the dataset
     if (!items) {
@@ -27356,7 +27345,7 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   LineGraph.prototype.setGroups = function (groups) {
     var me = this;
-    var ids = void 0;
+    var ids;
 
     // unsubscribe from current dataset
     if (this.groupsData) {
@@ -27429,17 +27418,13 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._removeGroup = function (groupId) {
-    var _this2 = this;
-
     if (this.groups.hasOwnProperty(groupId)) {
-      if (this.groups[groupId].options.yAxisOrientation === 'right') {
+      if (this.groups[groupId].options.yAxisOrientation == 'right') {
         this.yAxisRight.removeGroup(groupId);
         this.legendRight.removeGroup(groupId);
         this.legendRight.redraw();
       } else {
-        Object.keys(this.yAxisLeft).forEach(function (i) {
-          return _this2.yAxisLeft[i].removeGroup(groupId);
-        });
+        this.yAxisLeft.removeGroup(groupId);
         this.legendLeft.removeGroup(groupId);
         this.legendLeft.redraw();
       }
@@ -27455,33 +27440,25 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._updateGroup = function (group, groupId) {
-    var _this3 = this;
-
     if (!this.groups.hasOwnProperty(groupId)) {
       this.groups[groupId] = new GraphGroup(group, groupId, this.options, this.groupsUsingDefaultStyles);
-      if (this.groups[groupId].options.yAxisOrientation === 'right') {
+      if (this.groups[groupId].options.yAxisOrientation == 'right') {
         this.yAxisRight.addGroup(groupId, this.groups[groupId]);
         this.legendRight.addGroup(groupId, this.groups[groupId]);
       } else {
-        Object.keys(this.yAxisLeft).forEach(function (i) {
-          return _this3.yAxisLeft[i].addGroup(groupId, _this3.groups[groupId]);
-        });
+        this.yAxisLeft.addGroup(groupId, this.groups[groupId]);
         this.legendLeft.addGroup(groupId, this.groups[groupId]);
       }
     } else {
       this.groups[groupId].update(group);
-      if (this.groups[groupId].options.yAxisOrientation === 'right') {
+      if (this.groups[groupId].options.yAxisOrientation == 'right') {
         this.yAxisRight.updateGroup(groupId, this.groups[groupId]);
         this.legendRight.updateGroup(groupId, this.groups[groupId]);
         //If yAxisOrientation changed, clean out the group from the other axis.
-        Object.keys(this.yAxisLeft).forEach(function (i) {
-          return _this3.yAxisLeft[i].removeGroup(groupId);
-        });
+        this.yAxisLeft.removeGroup(groupId);
         this.legendLeft.removeGroup(groupId);
       } else {
-        Object.keys(this.yAxisLeft).forEach(function (i) {
-          return _this3.yAxisLeft[i].updateGroup(groupId, _this3.groups[groupId]);
-        });
+        this.yAxisLeft.updateGroup(groupId, this.groups[groupId]);
         this.legendLeft.updateGroup(groupId, this.groups[groupId]);
         //If yAxisOrientation changed, clean out the group from the other axis.
         this.yAxisRight.removeGroup(groupId);
@@ -27506,33 +27483,33 @@ return /******/ (function(modules) { // webpackBootstrap
       groupCounts.hasOwnProperty(groupId) ? groupCounts[groupId]++ : groupCounts[groupId] = 1;
     }
     //Now insert data into the arrays.
-    for (var _i = 0; _i < items.length; _i++) {
-      var _item = items[_i];
-      var _groupId = _item.group;
-      if (_groupId === null || _groupId === undefined) {
-        _groupId = UNGROUPED;
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var groupId = item.group;
+      if (groupId === null || groupId === undefined) {
+        groupId = UNGROUPED;
       }
-      if (!groupsContent.hasOwnProperty(_groupId)) {
-        groupsContent[_groupId] = new Array(groupCounts[_groupId]);
+      if (!groupsContent.hasOwnProperty(groupId)) {
+        groupsContent[groupId] = new Array(groupCounts[groupId]);
       }
       //Copy data (because of unmodifiable DataView input.
-      var extended = util.bridgeObject(_item);
-      extended.x = util.convert(_item.x, 'Date');
-      extended.orginalY = _item.y; //real Y
-      extended.y = Number(_item.y);
-      extended.index = _item.index;
-      extended.styleLine = _item.styleLine;
-      extended.stylePoint = _item.stylePoint;
+      var extended = util.bridgeObject(item);
+      extended.x = util.convert(item.x, 'Date');
+      extended.orginalY = item.y; //real Y
+      extended.y = Number(item.y);
+      extended.index = item.index;
+      extended.styleLine = item.styleLine;
+      extended.stylePoint = item.stylePoint;
 
-      var index = groupsContent[_groupId].length - groupCounts[_groupId]--;
-      groupsContent[_groupId][index] = extended;
+      var index = groupsContent[groupId].length - groupCounts[groupId]--;
+      groupsContent[groupId][index] = extended;
     }
 
     //Make sure all groups are present, to allow removal of old groups
-    for (var _groupId2 in this.groups) {
-      if (this.groups.hasOwnProperty(_groupId2)) {
-        if (!groupsContent.hasOwnProperty(_groupId2)) {
-          groupsContent[_groupId2] = new Array(0);
+    for (var groupId in this.groups) {
+      if (this.groups.hasOwnProperty(groupId)) {
+        if (!groupsContent.hasOwnProperty(groupId)) {
+          groupsContent[groupId] = new Array(0);
         }
       }
     }
@@ -27552,16 +27529,16 @@ return /******/ (function(modules) { // webpackBootstrap
       //Update legendas, style and axis
       for (var groupId in groupsContent) {
         if (groupsContent.hasOwnProperty(groupId)) {
-          if (groupsContent[groupId].length === 0) {
+          if (groupsContent[groupId].length == 0) {
             if (this.groups.hasOwnProperty(groupId)) {
               this._removeGroup(groupId);
             }
           } else {
             var group = undefined;
-            if (this.groupsData !== undefined) {
+            if (this.groupsData != undefined) {
               group = this.groupsData.get(groupId);
             }
-            if (group === undefined) {
+            if (group == undefined) {
               group = { id: groupId, content: this.options.defaultGroup + groupId };
             }
             this._updateGroup(group, groupId);
@@ -27590,24 +27567,24 @@ return /******/ (function(modules) { // webpackBootstrap
 
     // check whether zoomed (in that case we need to re-stack everything)
     var visibleInterval = this.body.range.end - this.body.range.start;
-    var zoomed = visibleInterval !== this.lastVisibleInterval;
+    var zoomed = visibleInterval != this.lastVisibleInterval;
     this.lastVisibleInterval = visibleInterval;
 
     // the svg element is three times as big as the width, this allows for fully dragging left and right
     // without reloading the graph. the controls for this are bound to events in the constructor
-    if (resized === true) {
+    if (resized == true) {
       this.svg.style.width = util.option.asSize(3 * this.props.width);
       this.svg.style.left = util.option.asSize(-this.props.width);
 
       // if the height of the graph is set as proportional, change the height of the svg
-      if ((this.options.height + '').indexOf("%") !== -1 || this.updateSVGheightOnResize === true) {
+      if ((this.options.height + '').indexOf("%") != -1 || this.updateSVGheightOnResize == true) {
         this.updateSVGheight = true;
       }
     }
 
     // update the height of the graph on each redraw of the graph.
-    if (this.updateSVGheight === true) {
-      if (this.options.graphHeight !== this.props.height + 'px') {
+    if (this.updateSVGheight == true) {
+      if (this.options.graphHeight != this.props.height + 'px') {
         this.options.graphHeight = this.props.height + 'px';
         this.svg.style.height = this.props.height + 'px';
       }
@@ -27617,15 +27594,15 @@ return /******/ (function(modules) { // webpackBootstrap
     }
 
     // zoomed is here to ensure that animations are shown correctly.
-    if (resized === true || zoomed === true || this.abortedGraphUpdate === true || this.forceGraphUpdate === true) {
+    if (resized == true || zoomed == true || this.abortedGraphUpdate == true || this.forceGraphUpdate == true) {
       resized = this._updateGraph() || resized;
       this.forceGraphUpdate = false;
     } else {
       // move the whole svg while dragging
-      if (this.lastStart !== 0) {
+      if (this.lastStart != 0) {
         var offset = this.body.range.start - this.lastStart;
         var range = this.body.range.end - this.body.range.start;
-        if (this.props.width !== 0) {
+        if (this.props.width != 0) {
           var rangePerPixelInv = this.props.width / range;
           var xOffset = offset * rangePerPixelInv;
           this.svg.style.left = -this.props.width - xOffset + 'px';
@@ -27649,7 +27626,7 @@ return /******/ (function(modules) { // webpackBootstrap
     for (var groupId in this.groups) {
       if (this.groups.hasOwnProperty(groupId)) {
         var group = this.groups[groupId];
-        if (group.visible === true && (this.options.groups.visibility[groupId] === undefined || this.options.groups.visibility[groupId] === true)) {
+        if (group.visible == true && (this.options.groups.visibility[groupId] === undefined || this.options.groups.visibility[groupId] == true)) {
           grouplist.push({ id: groupId, zIndex: group.options.zIndex });
         }
       }
@@ -27659,7 +27636,7 @@ return /******/ (function(modules) { // webpackBootstrap
       var bz = b.zIndex;
       if (az === undefined) az = 0;
       if (bz === undefined) bz = 0;
-      return az === bz ? 0 : az < bz ? -1 : 1;
+      return az == bz ? 0 : az < bz ? -1 : 1;
     });
     var groupIds = new Array(grouplist.length);
     for (var i = 0; i < grouplist.length; i++) {
@@ -27675,9 +27652,8 @@ return /******/ (function(modules) { // webpackBootstrap
   LineGraph.prototype._updateGraph = function () {
     // reset the svg elements
     DOMutil.prepareElements(this.svgElements);
-    if (this.props.width !== 0 && this.itemsData != null) {
-      var group = void 0,
-          i = void 0;
+    if (this.props.width != 0 && this.itemsData != null) {
+      var group, i;
       var groupRanges = {};
       var changeCalled = false;
       // this is the range of the SVG canvas
@@ -27708,7 +27684,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         //  at changeCalled, abort this update cycle as the graph needs another update with new Width input from the Redraw container.
         //  Cleanup SVG elements on abort.
-        if (changeCalled === true) {
+        if (changeCalled == true) {
           DOMutil.cleanupElements(this.svgElements);
           this.abortedGraphUpdate = true;
           return true;
@@ -27720,11 +27696,11 @@ return /******/ (function(modules) { // webpackBootstrap
         for (i = 0; i < groupIds.length; i++) {
           group = this.groups[groupIds[i]];
           if (this.options.stack === true && this.options.style === 'line') {
-            if (group.options.excludeFromStacking === undefined || !group.options.excludeFromStacking) {
-              if (below !== undefined) {
+            if (group.options.excludeFromStacking == undefined || !group.options.excludeFromStacking) {
+              if (below != undefined) {
                 this._stack(groupsData[group.id], groupsData[below.id]);
-                if (group.options.shaded.enabled === true && group.options.shaded.orientation !== "group") {
-                  if (group.options.shaded.orientation === "top" && below.options.shaded.orientation !== "group") {
+                if (group.options.shaded.enabled == true && group.options.shaded.orientation !== "group") {
+                  if (group.options.shaded.orientation == "top" && below.options.shaded.orientation !== "group") {
                     below.options.shaded.orientation = "group";
                     below.options.shaded.groupId = group.id;
                   } else {
@@ -27743,9 +27719,9 @@ return /******/ (function(modules) { // webpackBootstrap
         var paths = {};
         for (i = 0; i < groupIds.length; i++) {
           group = this.groups[groupIds[i]];
-          if (group.options.style === 'line' && group.options.shaded.enabled === true) {
+          if (group.options.style === 'line' && group.options.shaded.enabled == true) {
             var dataset = groupsData[groupIds[i]];
-            if (dataset == null || dataset.length === 0) {
+            if (dataset == null || dataset.length == 0) {
               continue;
             }
             if (!paths.hasOwnProperty(groupIds[i])) {
@@ -27782,7 +27758,7 @@ return /******/ (function(modules) { // webpackBootstrap
               case "point":
               //explicit no break;
               case "points":
-                if (group.options.style === "point" || group.options.style === "points" || group.options.drawPoints.enabled === true) {
+                if (group.options.style == "point" || group.options.style == "points" || group.options.drawPoints.enabled == true) {
                   Points.draw(groupsData[groupIds[i]], group, this.framework);
                 }
                 break;
@@ -27803,11 +27779,7 @@ return /******/ (function(modules) { // webpackBootstrap
   };
 
   LineGraph.prototype._stack = function (data, subData) {
-    var index = void 0,
-        dx = void 0,
-        dy = void 0,
-        subPrevPoint = void 0,
-        subNextPoint = void 0;
+    var index, dx, dy, subPrevPoint, subNextPoint;
     index = 0;
     // for each data point we look for a matching on in the set below
     for (var j = 0; j < data.length; j++) {
@@ -27824,7 +27796,7 @@ return /******/ (function(modules) { // webpackBootstrap
         } else if (subData[k].x > data[j].x) {
           // overshoot
           subNextPoint = subData[k];
-          if (k === 0) {
+          if (k == 0) {
             subPrevPoint = subNextPoint;
           } else {
             subPrevPoint = subData[k - 1];
@@ -27841,7 +27813,7 @@ return /******/ (function(modules) { // webpackBootstrap
       // linear interpolation
       dx = subNextPoint.x - subPrevPoint.x;
       dy = subNextPoint.y - subPrevPoint.y;
-      if (dx === 0) {
+      if (dx == 0) {
         data[j].y = data[j].orginalY + subNextPoint.y;
       } else {
         data[j].y = data[j].orginalY + dy / dx * (data[j].x - subPrevPoint.x) + subPrevPoint.y; // ax + b where b is data[j].y
@@ -27863,18 +27835,15 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._getRelevantData = function (groupIds, groupsData, minDate, maxDate) {
-    var group = void 0,
-        i = void 0,
-        j = void 0,
-        item = void 0;
+    var group, i, j, item;
     if (groupIds.length > 0) {
       for (i = 0; i < groupIds.length; i++) {
         group = this.groups[groupIds[i]];
         var itemsData = group.getItems();
         // optimization for sorted data
-        if (group.options.sort === true) {
+        if (group.options.sort == true) {
           var dateComparator = function dateComparator(a, b) {
-            return a.getTime() === b.getTime() ? 0 : a < b ? -1 : 1;
+            return a.getTime() == b.getTime() ? 0 : a < b ? -1 : 1;
           };
           var first = Math.max(0, util.binarySearchValue(itemsData, minDate, 'x', 'before', dateComparator));
           var last = Math.min(itemsData.length, util.binarySearchValue(itemsData, maxDate, 'x', 'after', dateComparator) + 1);
@@ -27902,11 +27871,11 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._applySampling = function (groupIds, groupsData) {
-    var group = void 0;
+    var group;
     if (groupIds.length > 0) {
       for (var i = 0; i < groupIds.length; i++) {
         group = this.groups[groupIds[i]];
-        if (group.options.sampling === true) {
+        if (group.options.sampling == true) {
           var dataContainer = groupsData[groupIds[i]];
           if (dataContainer.length > 0) {
             var increment = 1;
@@ -27939,12 +27908,10 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._getYRanges = function (groupIds, groupsData, groupRanges) {
-    var groupData = void 0,
-        group = void 0,
-        i = void 0;
+    var groupData, group, i;
     var combinedDataLeft = [];
     var combinedDataRight = [];
-    var options = void 0;
+    var options;
     if (groupIds.length > 0) {
       for (i = 0; i < groupIds.length; i++) {
         groupData = groupsData[groupIds[i]];
@@ -27977,8 +27944,6 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._updateYAxis = function (groupIds, groupRanges) {
-    var _this4 = this;
-
     var resized = false;
     var yAxisLeftUsed = false;
     var yAxisRightUsed = false;
@@ -27986,14 +27951,14 @@ return /******/ (function(modules) { // webpackBootstrap
         minRight = 1e9,
         maxLeft = -1e9,
         maxRight = -1e9,
-        minVal = void 0,
-        maxVal = void 0;
+        minVal,
+        maxVal;
     // if groups are present
     if (groupIds.length > 0) {
       // this is here to make sure that if there are no items in the axis but there are groups, that there is no infinite draw/redraw loop.
       for (var i = 0; i < groupIds.length; i++) {
         var group = this.groups[groupIds[i]];
-        if (group && group.options.yAxisOrientation !== 'right') {
+        if (group && group.options.yAxisOrientation != 'right') {
           yAxisLeftUsed = true;
           minLeft = 1e9;
           maxLeft = -1e9;
@@ -28005,13 +27970,13 @@ return /******/ (function(modules) { // webpackBootstrap
       }
 
       // if there are items:
-      for (var _i2 = 0; _i2 < groupIds.length; _i2++) {
-        if (groupRanges.hasOwnProperty(groupIds[_i2])) {
-          if (groupRanges[groupIds[_i2]].ignore !== true) {
-            minVal = groupRanges[groupIds[_i2]].min;
-            maxVal = groupRanges[groupIds[_i2]].max;
+      for (var i = 0; i < groupIds.length; i++) {
+        if (groupRanges.hasOwnProperty(groupIds[i])) {
+          if (groupRanges[groupIds[i]].ignore !== true) {
+            minVal = groupRanges[groupIds[i]].min;
+            maxVal = groupRanges[groupIds[i]].max;
 
-            if (groupRanges[groupIds[_i2]].yAxisOrientation !== 'right') {
+            if (groupRanges[groupIds[i]].yAxisOrientation != 'right') {
               yAxisLeftUsed = true;
               minLeft = minLeft > minVal ? minVal : minLeft;
               maxLeft = maxLeft < maxVal ? maxVal : maxLeft;
@@ -28020,54 +27985,38 @@ return /******/ (function(modules) { // webpackBootstrap
               minRight = minRight > minVal ? minVal : minRight;
               maxRight = maxRight < maxVal ? maxVal : maxRight;
             }
-
-            if (this.yAxisLeft[groupIds[_i2]]) {
-              if (yAxisLeftUsed === true) {
-                this.yAxisLeft[groupIds[_i2]].setRange(minLeft, maxLeft);
-              }
-              resized = this._toggleAxisVisiblity(yAxisLeftUsed, this.yAxisLeft[groupIds[_i2]]) || resized;
-            }
           }
         }
       }
 
-      if (yAxisRightUsed === true) {
+      if (yAxisLeftUsed == true) {
+        this.yAxisLeft.setRange(minLeft, maxLeft);
+      }
+      if (yAxisRightUsed == true) {
         this.yAxisRight.setRange(minRight, maxRight);
       }
     }
+    resized = this._toggleAxisVisiblity(yAxisLeftUsed, this.yAxisLeft) || resized;
     resized = this._toggleAxisVisiblity(yAxisRightUsed, this.yAxisRight) || resized;
 
-    if (yAxisRightUsed === true && yAxisLeftUsed === true) {
-      Object.keys(this.yAxisLeft).forEach(function (i) {
-        return _this4.yAxisLeft[i].drawIcons = true;
-      });
+    if (yAxisRightUsed == true && yAxisLeftUsed == true) {
+      this.yAxisLeft.drawIcons = true;
       this.yAxisRight.drawIcons = true;
     } else {
-      Object.keys(this.yAxisLeft).forEach(function (i) {
-        return _this4.yAxisLeft[i].drawIcons = false;
-      });
+      this.yAxisLeft.drawIcons = false;
       this.yAxisRight.drawIcons = false;
     }
     this.yAxisRight.master = !yAxisLeftUsed;
-    if (Object.keys(this.yAxisLeft).length && !this.yAxisRight.masterAxis) {
-      var lastYAxisLeft = Object.keys(this.yAxisLeft).pop();
-      this.yAxisRight.masterAxis = this.yAxisLeft[lastYAxisLeft];
-    }
+    this.yAxisRight.masterAxis = this.yAxisLeft;
 
-    if (this.yAxisRight.master === false) {
-      if (yAxisRightUsed === true) {
-        Object.keys(this.yAxisLeft).forEach(function (i) {
-          return _this4.yAxisLeft[i].lineOffset = _this4.yAxisRight.width;
-        });
+    if (this.yAxisRight.master == false) {
+      if (yAxisRightUsed == true) {
+        this.yAxisLeft.lineOffset = this.yAxisRight.width;
       } else {
-        Object.keys(this.yAxisLeft).forEach(function (i) {
-          return _this4.yAxisLeft[i].lineOffset = 0;
-        });
+        this.yAxisLeft.lineOffset = 0;
       }
 
-      for (var _i3 = 0; _i3 < groupIds.length && this.yAxisLeft[groupIds[_i3]]; _i3++) {
-        resized = this.yAxisLeft[groupIds[_i3]].redraw(_i3, groupIds[_i3]) || resized;
-      }
+      resized = this.yAxisLeft.redraw() || resized;
       resized = this.yAxisRight.redraw() || resized;
     } else {
       resized = this.yAxisRight.redraw() || resized;
@@ -28075,9 +28024,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
     // clean the accumulated lists
     var tempGroups = ['__barStackLeft', '__barStackRight', '__lineStackLeft', '__lineStackRight'];
-    for (var _i4 = 0; _i4 < tempGroups.length; _i4++) {
-      if (groupIds.indexOf(tempGroups[_i4]) !== -1) {
-        groupIds.splice(groupIds.indexOf(tempGroups[_i4]), 1);
+    for (var i = 0; i < tempGroups.length; i++) {
+      if (groupIds.indexOf(tempGroups[i]) != -1) {
+        groupIds.splice(groupIds.indexOf(tempGroups[i]), 1);
       }
     }
 
@@ -28094,13 +28043,13 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   LineGraph.prototype._toggleAxisVisiblity = function (axisUsed, axis) {
     var changed = false;
-    if (axisUsed === false) {
-      if (axis.dom.frame.parentNode && axis.hidden === false) {
+    if (axisUsed == false) {
+      if (axis.dom.frame.parentNode && axis.hidden == false) {
         axis.hide();
         changed = true;
       }
     } else {
-      if (!axis.dom.frame.parentNode && axis.hidden === true) {
+      if (!axis.dom.frame.parentNode && axis.hidden == true) {
         axis.show();
         changed = true;
       }
@@ -28121,7 +28070,7 @@ return /******/ (function(modules) { // webpackBootstrap
     var toScreen = this.body.util.toScreen;
 
     for (var i = 0; i < datapoints.length; i++) {
-      if (this.body.range.options.gap === 0) datapoints[i].screen_x = this.props.width + this._calculateGapPositionVIS(datapoints[i].x);else datapoints[i].screen_x = toScreen(datapoints[i].x) + this.props.width + this._calculateGapPositionVIS(datapoints[i].x);
+      if (this.body.range.options.gap == 0) datapoints[i].screen_x = this.props.width + this._calculateGapPositionVIS(datapoints[i].x);else datapoints[i].screen_x = toScreen(datapoints[i].x) + this.props.width + this._calculateGapPositionVIS(datapoints[i].x);
 
       datapoints[i].screen_y = datapoints[i].y; //starting point for range calculations
     }
@@ -28134,10 +28083,10 @@ return /******/ (function(modules) { // webpackBootstrap
     var elementHeaderWidth = document.querySelector('.tl-setting-bar');
 
     // where widthTimeline 0 return 0
-    if (widthTimeline === 0) return 0;
+    if (widthTimeline == 0) return 0;
 
     // calculate when gap === 0 (fit)
-    if (this.body.range.options.gap === 0) {
+    if (this.body.range.options.gap == 0) {
       var dateElement = new Date(x);
       var index = 0;
       var itemHours = null;
@@ -28174,13 +28123,13 @@ return /******/ (function(modules) { // webpackBootstrap
       return widthElement * index + (widthElement / 2 + 1.5);
     } else {
       var gap = 0;
-      if (this.body.range.options.gap < .05) gap = 1 / this.body.range.options.gap * .028;else if (this.body.range.options.gap < .1) gap = 1 / this.body.range.options.gap * .15;else if (this.body.range.options.gap < .5) gap = 1 / this.body.range.options.gap * .5;else if (this.body.range.options.gap < 1) gap = 1 / this.body.range.options.gap * 1.15;else if (this.body.range.options.gap === 1) gap = this.body.range.options.gap * 2.45;else if (this.body.range.options.gap === 2) gap = this.body.range.options.gap * .85;else if (this.body.range.options.gap < 5) gap = this.body.range.options.gap * .95;else gap = this.body.range.options.gap * 1.05;
+      if (this.body.range.options.gap < .05) gap = 1 / this.body.range.options.gap * .028;else if (this.body.range.options.gap < .1) gap = 1 / this.body.range.options.gap * .15;else if (this.body.range.options.gap < .5) gap = 1 / this.body.range.options.gap * .5;else if (this.body.range.options.gap < 1) gap = 1 / this.body.range.options.gap * 1.15;else if (this.body.range.options.gap == 1) gap = this.body.range.options.gap * 2.45;else if (this.body.range.options.gap == 2) gap = this.body.range.options.gap * .85;else if (this.body.range.options.gap < 5) gap = this.body.range.options.gap * .95;else gap = this.body.range.options.gap * 1.05;
 
       //width timeline > 1000
       if (widthTimeline > 1000) {
         gap = gap + .75;
         if (gap > 5) gap = gap + 1.75;
-        if (this.body.range.options.gap === 1) gap = 0;
+        if (this.body.range.options.gap == 1) gap = 0;
         gap = Math.round(gap);
       }
 
@@ -28189,7 +28138,7 @@ return /******/ (function(modules) { // webpackBootstrap
         if (this.body.range.options.gap < .05) gap = gap * .0125;else if (this.body.range.options.gap < 1) gap = gap * .45;
         if (this.body.range.options.gap > 1) gap = gap + .75;
         if (gap > 8) gap = gap * .75;
-        if (this.body.range.options.gap === 1) gap = gap * .6;
+        if (this.body.range.options.gap == 1) gap = gap * .6;
       }
 
       var dateItem = new Date(x);
@@ -28215,9 +28164,9 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._convertYcoordinates = function (datapoints, group) {
-    var axis = this.yAxisLeft[group.id];
+    var axis = this.yAxisLeft;
     var svgHeight = Number(this.svg.style.height.replace('px', ''));
-    if (group.options.yAxisOrientation === 'right') {
+    if (group.options.yAxisOrientation == 'right') {
       axis = this.yAxisRight;
     }
     for (var i = 0; i < datapoints.length; i++) {
@@ -28238,7 +28187,6 @@ return /******/ (function(modules) { // webpackBootstrap
   var DOMutil = __webpack_require__(7);
   var Component = __webpack_require__(28);
   var DataScale = __webpack_require__(51);
-
   /**
    * A horizontal time axis
    * @param {Object} [options]        See DataAxis.setOptions for the available
@@ -28354,7 +28302,7 @@ return /******/ (function(modules) { // webpackBootstrap
   DataAxis.prototype.setOptions = function (options) {
     if (options) {
       var redraw = false;
-      if (this.options.orientation !== options.orientation && options.orientation !== undefined) {
+      if (this.options.orientation != options.orientation && options.orientation !== undefined) {
         redraw = true;
       }
       var fields = ['orientation', 'showMinorLabels', 'showMinorLines', 'showMajorLabels', 'icons', 'majorLinesOffset', 'minorLinesOffset', 'labelOffsetX', 'labelOffsetY', 'iconWidth', 'width', 'visible', 'data', 'left', 'right', 'alignZeros'];
@@ -28394,7 +28342,7 @@ return /******/ (function(modules) { // webpackBootstrap
   DataAxis.prototype._redrawGroupIcons = function () {
     DOMutil.prepareElements(this.svgElements);
 
-    var x = void 0;
+    var x;
     var iconWidth = this.options.iconWidth;
     var iconHeight = 15;
     var iconOffset = 4;
@@ -28478,12 +28426,9 @@ return /******/ (function(modules) { // webpackBootstrap
    * Repaint the component
    * @return {boolean} Returns true if the component is resized
    */
-  DataAxis.prototype.redraw = function (index, groupName) {
+  DataAxis.prototype.redraw = function () {
     var resized = false;
     var activeGroups = 0;
-    var id = void 0;
-    var groupingAxisID = '';
-    var styleParam = {};
 
     // Make sure the line container adheres to the vertical scrolling.
     this.dom.lineContainer.style.top = this.body.domProps.scrollTop + 'px';
@@ -28492,21 +28437,9 @@ return /******/ (function(modules) { // webpackBootstrap
       if (this.groups.hasOwnProperty(groupId)) {
         if (this.groups[groupId].visible === true && (this.linegraphOptions.visibility[groupId] === undefined || this.linegraphOptions.visibility[groupId] === true)) {
           activeGroups++;
-          id = this.groups[groupId].group.value;
         }
       }
     }
-
-    if (groupName) {
-      id = this.groups[groupName].group.value;
-      if (this.groups[groupName].group.styleAxis) {
-        styleParam = this.groups[groupName].group.styleAxis;
-      }
-      if (this.groups[groupName].group.groupingAxisID) {
-        groupingAxisID = this.groups[groupName].group.groupingAxisID;
-      }
-    }
-
     if (this.amountOfGroups === 0 || activeGroups === 0) {
       this.hide();
     } else {
@@ -28522,9 +28455,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
       // update classname
       frame.className = 'vis-data-axis';
-      frame.setAttribute('row-id', id);
-      frame.setAttribute('index', index);
-      frame.setAttribute('grouping-axis-id', groupingAxisID);
 
       // calculate character width and height
       this._calculateCharSize();
@@ -28544,6 +28474,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
       //  take frame offline while updating (is almost twice as fast)
       if (orientation === 'left') {
+        frame.style.top = '0';
         frame.style.left = '0';
         frame.style.bottom = '';
         frame.style.width = this.width + 'px';
@@ -28560,11 +28491,6 @@ return /******/ (function(modules) { // webpackBootstrap
         this.props.width = this.body.domProps.right.width;
         this.props.height = this.body.domProps.right.height;
       }
-
-      // Set style params to frame style
-      Object.keys(styleParam).forEach(function (key) {
-        frame.style[key] = styleParam[key];
-      });
 
       resized = this._redrawLabels();
       resized = this._isResized() || resized;
@@ -28591,23 +28517,23 @@ return /******/ (function(modules) { // webpackBootstrap
     DOMutil.prepareElements(this.DOMelements.lines);
     DOMutil.prepareElements(this.DOMelements.labels);
     var orientation = this.options['orientation'];
-    var customRange = this.options[orientation].range !== undefined ? this.options[orientation].range : {};
+    var customRange = this.options[orientation].range != undefined ? this.options[orientation].range : {};
 
     //Override range with manual options:
     var autoScaleEnd = true;
-    if (customRange.max !== undefined) {
+    if (customRange.max != undefined) {
       this.range.end = customRange.max;
       autoScaleEnd = false;
     }
     var autoScaleStart = true;
-    if (customRange.min !== undefined) {
+    if (customRange.min != undefined) {
       this.range.start = customRange.min;
       autoScaleStart = false;
     }
 
     this.scale = new DataScale(this.range.start, this.range.end, autoScaleStart, autoScaleEnd, this.dom.frame.offsetHeight, this.props.majorCharHeight, this.options.alignZeros, this.options[orientation].format);
 
-    if (this.master === false && this.masterAxis !== undefined) {
+    if (this.master === false && this.masterAxis != undefined) {
       this.scale.followScale(this.masterAxis.scale);
     }
 
@@ -29579,8 +29505,7 @@ return /******/ (function(modules) { // webpackBootstrap
       height: callbackResult.height || group.options.drawPoints.height,
       width: callbackResult.width || group.options.drawPoints.width,
       props: callbackResult.props || group.group.props,
-      className: callbackResult.className || group.className,
-      rowId: group.group.value
+      className: callbackResult.className || group.className
     };
   }
 
@@ -29723,7 +29648,6 @@ return /******/ (function(modules) { // webpackBootstrap
           }
           // copy properties to path for drawing.
           path.setAttributeNS(null, 'd', 'M' + pathArray[0][0] + "," + pathArray[0][1] + " " + this.serializePath(pathArray, type, false));
-          path.setAttributeNS(null, 'row-id', group.group.value);
       }
       return path;
   };
@@ -30543,7 +30467,7 @@ return /******/ (function(modules) { // webpackBootstrap
         var groupId = (me.pointToRow(event.offsetY) || {}).value;
         eventProperties.data = { id: groupId };
 
-        if (groupNow !== groupId) {
+        if (groupNow != groupId) {
           if (groupNow) {
             var eventPropertiesOld = _.clone(eventProperties);
             eventPropertiesOld.data = { id: groupNow };
@@ -30602,7 +30526,7 @@ return /******/ (function(modules) { // webpackBootstrap
       key: 'setGroups',
       value: function setGroups(groups) {
         // convert to type DataSet when needed
-        var newDataSet = void 0;
+        var newDataSet;
         if (!groups) {
           newDataSet = null;
         } else if (groups instanceof DataSet || groups instanceof DataView) {
@@ -30621,7 +30545,7 @@ return /******/ (function(modules) { // webpackBootstrap
         var initialLoad = this.itemsData == null;
 
         // convert to type DataSet when needed
-        var newDataSet = void 0;
+        var newDataSet;
         if (!items) {
           newDataSet = null;
         } else if (items instanceof DataSet || items instanceof DataView) {
@@ -30641,9 +30565,9 @@ return /******/ (function(modules) { // webpackBootstrap
         this.linegraph && this.linegraph.setItems(newDataSet);
 
         if (initialLoad) {
-          if (this.options.start !== undefined || this.options.end !== undefined) {
-            var start = this.options.start !== undefined ? this.options.start : null;
-            var end = this.options.end !== undefined ? this.options.end : null;
+          if (this.options.start != undefined || this.options.end != undefined) {
+            var start = this.options.start != undefined ? this.options.start : null;
+            var end = this.options.end != undefined ? this.options.end : null;
             this.setWindow(start, end, { animation: false });
           } else {
             this.fit({ animation: false });
@@ -30682,7 +30606,7 @@ return /******/ (function(modules) { // webpackBootstrap
         // calculate min from start filed
         for (var groupId in this.linegraph.groups) {
           if (this.linegraph.groups.hasOwnProperty(groupId)) {
-            if (this.linegraph.groups[groupId].visible === true) {
+            if (this.linegraph.groups[groupId].visible == true) {
               for (var i = 0; i < this.linegraph.groups[groupId].itemsData.length; i++) {
                 var item = this.linegraph.groups[groupId].itemsData[i];
                 var value = util.convert(item.x, 'Date').valueOf();
@@ -30762,7 +30686,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         // data axis
         this.options.dataAxis.orientation = 'left';
-        this.yAxisLeft = [];
+        this.yAxisLeft = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
 
         this.options.dataAxis.orientation = 'right';
         this.yAxisRight = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
@@ -30781,9 +30705,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
         // reset the svg elements
         DOMutil.prepareElements(this.svgElements);
-        if (this.props.width !== 0 && this.itemsData != null) {
-          var group = void 0,
-              i = void 0;
+        if (this.props.width != 0 && this.itemsData != null) {
+          var group, i;
           var groupRanges = {};
           var changeCalled = false;
           // this is the range of the SVG canvas
@@ -30793,10 +30716,19 @@ return /******/ (function(modules) { // webpackBootstrap
           // getting group Ids
           var groupIds = this._getSortedGroupIds();
           if (groupIds.length > 0) {
+            var groupsData;
+            var below;
+            var previousY;
+            var actualY;
+            var paths;
+            var dataset;
+            var subGroupId;
+
             var _ret = function () {
-              var groupsData = {};
+              groupsData = {};
 
               // fill groups data, this only loads the data we require based on the timewindow
+
               _this2._getRelevantData(groupIds, groupsData, minDate, maxDate);
 
               // apply sampling, if disabled, it will pass through this function.
@@ -30825,9 +30757,10 @@ return /******/ (function(modules) { // webpackBootstrap
               _this2.abortedGraphUpdate = false;
 
               // With the yAxis scaled correctly, use this to get the Y values of the points.
-              var below = undefined;
-              var previousY = 0;
-              var actualY = 0;
+              below = undefined;
+              previousY = 0;
+              actualY = 0;
+
               for (i = 0; i < groupIds.length; i++) {
                 group = _this2.groups[groupIds[i]];
                 if (_this2.options.stack === true && (_this2.options.style === 'line' || _this2.options.style === 'trend')) {
@@ -30871,11 +30804,13 @@ return /******/ (function(modules) { // webpackBootstrap
               };
 
               //Precalculate paths and draw shading if appropriate. This will make sure the shading is always behind any lines.
-              var paths = {};
+              paths = {};
+
               for (i = 0; i < groupIds.length; i++) {
                 group = _this2.groups[groupIds[i]];
                 if ((group.options.style === 'line' || group.options.style === 'trend') && group.options.shaded.enabled == true) {
-                  var dataset = groupsData[groupIds[i]];
+                  dataset = groupsData[groupIds[i]];
+
                   if (dataset == null || dataset.length == 0) {
                     continue;
                   }
@@ -30883,7 +30818,8 @@ return /******/ (function(modules) { // webpackBootstrap
                     paths[groupIds[i]] = Lines.calcPath(dataset, group);
                   }
                   if (group.options.shaded.orientation === "group") {
-                    var subGroupId = group.options.shaded.groupId;
+                    subGroupId = group.options.shaded.groupId;
+
                     if (groupIds.indexOf(subGroupId) === -1) {
                       console.log(group.id + ": Unknown shading group target given:" + subGroupId);
                       continue;
@@ -31020,8 +30956,6 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: 'setOptions',
       value: function setOptions(options) {
-        var _this3 = this;
-
         if (options) {
           var fields = ['events', 'height', 'graphHeight', 'style', 'dataAxis', 'groups'];
           if (options.graphHeight === undefined && options.height !== undefined) {
@@ -31038,16 +30972,18 @@ return /******/ (function(modules) { // webpackBootstrap
           util.mergeOptions(this.options, options, 'shaded');
           util.mergeOptions(this.options, options, 'legend');
 
-          if (this.yAxisLeft && options.dataAxis !== undefined) {
-            Object.keys(this.yAxisLeft).forEach(function (i) {
-              return _this3.yAxisLeft[i].setOptions(_this3.options.dataAxis);
-            });
-            this.yAxisRight.setOptions(this.options.dataAxis);
+          if (this.yAxisLeft) {
+            if (options.dataAxis !== undefined) {
+              this.yAxisLeft.setOptions(this.options.dataAxis);
+              this.yAxisRight.setOptions(this.options.dataAxis);
+            }
           }
 
-          if (this.legendLeft && options.legend !== undefined) {
-            this.legendLeft.setOptions(this.options.legend);
-            this.legendRight.setOptions(this.options.legend);
+          if (this.legendLeft) {
+            if (options.legend !== undefined) {
+              this.legendLeft.setOptions(this.options.legend);
+              this.legendRight.setOptions(this.options.legend);
+            }
           }
 
           if (this.groups.hasOwnProperty(UNGROUPED)) {
@@ -31065,13 +31001,11 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: '_updateGroups',
       value: function _updateGroups(groupsContent) {
-        var _this4 = this;
+        var _this3 = this;
 
-        this.yAxisLeft = []; // Clear Axis Left Array
         this.groupsData.forEach(function (group) {
-          _this4._insertYAxisLeft(group);
-          _this4._updateGroup(group, group.id);
-          _this4.groups[group.id].setItems(groupsContent[group.id]);
+          _this3._updateGroup(group, group.id);
+          _this3.groups[group.id].setItems(groupsContent[group.id]);
         });
       }
     }, {
@@ -31101,33 +31035,34 @@ return /******/ (function(modules) { // webpackBootstrap
           max: Math.max.apply(Math, _toConsumableArray(listOfValues)),
           min: Math.min.apply(Math, _toConsumableArray(listOfValues))
         };
+        if (group.summary && listOfValues.length > 0) {
+          range.max = group.group.maxValue;
+          range.min = group.group.minValue;
+        }
 
         for (var i = 0; i < datapoints.length; i++) {
           var convertedValue = 0;
           if (range.min === range.max) {
             convertedValue = Math.round(baseScreenY * 50 / 100);
           } else {
-            if (Array.isArray(axis)) {
-              convertedValue = axis[group.id] ? Math.round(axis[group.id].convertValue(datapoints[i].y, range, baseScreenY)) : 0;
-            } else {
-              convertedValue = Math.round(axis.convertValue(datapoints[i].y, range, baseScreenY));
-            }
+            convertedValue = Math.round(axis.convertValue(datapoints[i].y, range, baseScreenY));
           }
           datapoints[i].screen_y = actualY - offset / 2 - convertedValue;
         }
         if (range.min === range.max) {
           group.zeroPosition = actualY - offset / 2 - Math.round(baseScreenY * 50 / 100);
         } else {
-          if (Array.isArray(axis)) {
-            group.zeroPosition = axis[group.id] ? actualY - offset / 2 - Math.round(axis[group.id].convertValue(range.min, range, baseScreenY)) : 0;
-          } else {
-            group.zeroPosition = actualY - offset / 2 - Math.round(axis.convertValue(range.min, range, baseScreenY));
-          }
+          group.zeroPosition = actualY - offset / 2 - Math.round(axis.convertValue(range.min, range, baseScreenY));
         }
       }
     }, {
       key: '_convertAvgYcoordinates',
       value: function _convertAvgYcoordinates(datapoints, group, actualY, previousY) {
+        var axis = this.yAxisLeft;
+        if (group.options.yAxisOrientation == 'right') {
+          axis = this.yAxisRight;
+        }
+
         var offset = 10;
         var baseScreenY = actualY - previousY - offset;
         var listOfMaxValues = datapoints.map(function (d) {
@@ -31180,18 +31115,6 @@ return /******/ (function(modules) { // webpackBootstrap
         this.options.height = totalHeight + 1;
         this.options.graphHeight = totalHeight + 1;
         this.options.legend = { enabled: false };
-      }
-
-      /**
-       * Update Axis Left according Group Data
-       * @param group
-       * @private
-       */
-
-    }, {
-      key: '_insertYAxisLeft',
-      value: function _insertYAxisLeft(group) {
-        this.yAxisLeft[group.id] = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
       }
     }]);
 
@@ -31277,7 +31200,7 @@ return /******/ (function(modules) { // webpackBootstrap
       value: function setOptions(options) {
         if (options) {
           var redraw = false;
-          if (this.options.orientation !== options.orientation && options.orientation !== undefined) {
+          if (this.options.orientation != options.orientation && options.orientation !== undefined) {
             redraw = true;
           }
           var fields = ['chart', 'orientation', 'showMinorLabels', 'showMinorLines', 'showMajorLabels', 'linesOffsetY', 'linesOffsetX', 'extraLineWidth', 'majorLinesOffset', 'minorLinesOffset', 'labelOffsetX', 'labelOffsetY', 'width', 'visible', 'data', 'left', 'right', 'fontSize'];
@@ -31301,23 +31224,23 @@ return /******/ (function(modules) { // webpackBootstrap
         DOMutil.prepareElements(this.DOMelements.labels);
         DOMutil.prepareElements(this.DOMelements.backgrounds);
 
-        var customRange = this.options[orientation].range !== undefined ? this.options[orientation].range : {};
+        var customRange = this.options[orientation].range != undefined ? this.options[orientation].range : {};
 
         //Override range with manual options:
         var autoScaleEnd = true;
-        if (customRange.max !== undefined && !Number.isNaN(customRange.max)) {
+        if (customRange.max != undefined && !Number.isNaN(customRange.max)) {
           this.range.end = customRange.max;
           autoScaleEnd = false;
         }
         var autoScaleStart = true;
-        if (customRange.min !== undefined && !Number.isNaN(customRange.min)) {
+        if (customRange.min != undefined && !Number.isNaN(customRange.min)) {
           this.range.start = customRange.min;
           autoScaleStart = false;
         }
 
         this.scale = new DataScale(this.range.start, this.range.end, autoScaleStart, autoScaleEnd, this.dom.frame.offsetHeight, this.props.majorCharHeight, this.options.alignZeros, this.options[orientation].format);
 
-        if (this.master === false && this.masterAxis !== undefined) {
+        if (this.master === false && this.masterAxis != undefined) {
           this.scale.followScale(this.masterAxis.scale);
         }
 
@@ -31340,12 +31263,19 @@ return /******/ (function(modules) { // webpackBootstrap
         for (var key in this.groups) {
           var _group = this.groups[key];
           if (_group.summary && !summaryLine || !_group.summary) {
+            var ySummary = 0;
+            for (var s in this.groups) {
+              var grupoSummary = this.groups[s];
+              var rowHeightSummary = grupoSummary.group.rowHeightId['tl-groups_' + grupoSummary.id];
+              ySummary += rowHeightSummary ? rowHeightSummary : 0;
+            }
+
             var _previousY = y;
             var rowHeight = _group.group.rowHeightId['tl-groups_' + _group.id];
             y += rowHeight;
 
-            this.drawLabels.renderLabel(this.height, orientation, _group, _previousY);
-            this.drawLines.renderLine(y, _group, _previousY, this.height);
+            this.drawLabels.renderLabel(y, orientation, _group, _previousY);
+            this.drawLines.renderLine(y, _group, _previousY, ySummary);
             summaryLine = true;
           }
         }
@@ -31440,63 +31370,76 @@ return /******/ (function(modules) { // webpackBootstrap
       }
     }, {
       key: '_renderArrowAvgLabel',
-      value: function _renderArrowAvgLabel(lineHeight, previousY, orientation, labelClass, group) {
-        if (!group.itemsData || group.itemsData.length === 0) {
-          return; // exit
+      value: function _renderArrowAvgLabel(y, previousY, orientation, labelClass, group) {
+        if (group.itemsData && group.itemsData.length > 0) {
+          var listOfMaxValues = group.itemsData.map(function (item) {
+            return item.maxValue;
+          });
+          var listOfMinValues = group.itemsData.map(function (item) {
+            return item.minValue;
+          });
+          var maxValue = Math.max.apply(Math, _toConsumableArray(listOfMaxValues));
+          var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
+          var minValue = Math.min.apply(Math, _toConsumableArray(listOfMinValues));
+
+          var _getSupportLabels2 = this._getSupportLabels(y, previousY),
+              topLabelY = _getSupportLabels2.topLabelY,
+              middleLabelY = _getSupportLabels2.middleLabelY,
+              bottomLabelY = _getSupportLabels2.bottomLabelY;
+
+          this._redrawLabel(y - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
+          this._redrawLabel(y - middleLabelY, avgValue, orientation, labelClass, this.props.minorCharHeight);
+          this._redrawLabel(y - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
         }
-        var maxValue = Math.max.apply(Math, group.itemsData.map(function (item) {
-          return item.maxValue;
-        }));
-        var minValue = Math.min.apply(Math, group.itemsData.map(function (item) {
-          return item.minValue;
-        }));
-
-        if (group.summary && group.group && group.group.intervalScale) {
-          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue });
-          return; // exit
-        }
-
-        var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
-
-        var _getSupportLabels2 = this._getSupportLabels(lineHeight, previousY),
-            topLabelY = _getSupportLabels2.topLabelY,
-            middleLabelY = _getSupportLabels2.middleLabelY,
-            bottomLabelY = _getSupportLabels2.bottomLabelY;
-
-        this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
-        this._redrawLabel(lineHeight - middleLabelY, avgValue, orientation, labelClass, this.props.minorCharHeight);
-        this._redrawLabel(lineHeight - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
       }
     }, {
-      key: '_renderLineLabel',
-      value: function _renderLineLabel(lineHeight, previousY, orientation, labelClass, group) {
+      key: '_renderCircleLabel',
+      value: function _renderCircleLabel(y, previousY, orientation, labelClass, group) {
         var values = group.itemsData.map(function (item) {
           return item.y;
         });
-        if (values.length === 0) {
-          return; // exit
-        }
-        var maxValue = Math.max.apply(Math, _toConsumableArray(values));
-        var minValue = Math.min.apply(Math, _toConsumableArray(values));
 
-        if (group.summary && group.group && group.group.intervalScale) {
-          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue });
-          return; // exit
-        }
+        if (values.length > 0) {
+          var maxValue = Math.max.apply(Math, _toConsumableArray(values));
+          var minValue = Math.min.apply(Math, _toConsumableArray(values));
 
+          var _getSupportLabels3 = this._getSupportLabels(y, previousY),
+              topLabelY = _getSupportLabels3.topLabelY,
+              middleLabelY = _getSupportLabels3.middleLabelY,
+              bottomLabelY = _getSupportLabels3.bottomLabelY;
+
+          if (maxValue === minValue) {
+            this._redrawLabel(y - middleLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
+          } else {
+            this._redrawLabel(y - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
+            this._redrawLabel(y - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
+          }
+        }
+      }
+    }, {
+      key: '_renderLineLabel',
+      value: function _renderLineLabel(y, previousY, orientation, labelClass, group) {
+        var values = group.itemsData.map(function (item) {
+          return item.y;
+        });
         var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
 
-        var _getSupportLabels3 = this._getSupportLabels(lineHeight, previousY, this.options.fontSize),
-            topLabelY = _getSupportLabels3.topLabelY,
-            middleLabelY = _getSupportLabels3.middleLabelY,
-            bottomLabelY = _getSupportLabels3.bottomLabelY;
+        if (values.length > 0) {
+          var maxValue = Math.max.apply(Math, _toConsumableArray(values));
+          var minValue = Math.min.apply(Math, _toConsumableArray(values));
 
-        if (maxValue === minValue || avgValue) {
-          var label = avgValue !== undefined ? avgValue : maxValue;
-          this._redrawLabel(lineHeight - middleLabelY, label, orientation, labelClass, this.props.minorCharHeight);
-        } else {
-          this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
-          this._redrawLabel(lineHeight - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
+          var _getSupportLabels4 = this._getSupportLabels(y, previousY, this.options.fontSize),
+              topLabelY = _getSupportLabels4.topLabelY,
+              middleLabelY = _getSupportLabels4.middleLabelY,
+              bottomLabelY = _getSupportLabels4.bottomLabelY;
+
+          if (maxValue === minValue || avgValue) {
+            var label = avgValue !== undefined ? avgValue : maxValue;
+            this._redrawLabel(y - middleLabelY, label, orientation, labelClass, this.props.minorCharHeight);
+          } else {
+            this._redrawLabel(y - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
+            this._redrawLabel(y - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
+          }
         }
       }
     }, {
@@ -31509,46 +31452,6 @@ return /******/ (function(modules) { // webpackBootstrap
         var bottomLabelY = size * 15 / 100 + labelOffsetY;
 
         return { topLabelY: topLabelY, middleLabelY: middleLabelY, bottomLabelY: bottomLabelY };
-      }
-    }, {
-      key: '_renderLineLabelWithScale',
-      value: function _renderLineLabelWithScale(_ref) {
-        var lineHeight = _ref.lineHeight,
-            orientation = _ref.orientation,
-            labelClass = _ref.labelClass,
-            group = _ref.group,
-            maxValue = _ref.maxValue,
-            minValue = _ref.minValue;
-
-        var labelHeight = 10;
-        var internHeight = lineHeight - labelHeight * 2;
-        var offset = labelHeight / 2;
-        var amountLabelsToFit = Math.floor(internHeight / labelHeight);
-        var intervalScale = group.group.intervalScale;
-        var amountLabels = Math.floor((maxValue - minValue) / intervalScale) - 1; // Remove one that is max label
-        var position = lineHeight - offset;
-        var label = minValue;
-
-        // Divides the number of labels to fit the available height
-        while (amountLabels > amountLabelsToFit) {
-          amountLabels = Math.floor((amountLabels - 1) / 2);
-          intervalScale += intervalScale;
-        }
-
-        // Displays a max label aligned on the top
-        this._redrawLabel(offset, maxValue, orientation, labelClass, this.props.minorCharHeight);
-
-        // Displays a min label aligned in the footer
-        this._redrawLabel(position, minValue, orientation, labelClass, this.props.minorCharHeight);
-
-        // Calc internal height for number of occurrences
-        var averageHeightAvailable = (internHeight - amountLabels * labelHeight) / (amountLabels + 1);
-
-        for (var i = 0; i < amountLabels && amountLabelsToFit > 0; i++) {
-          label += intervalScale;
-          position -= averageHeightAvailable + labelHeight;
-          this._redrawLabel(position, label, orientation, labelClass, this.props.minorCharHeight);
-        }
       }
     }]);
 

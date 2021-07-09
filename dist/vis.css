@@ -348,6 +348,10 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
   background-color: #F2F2F2 !important;
 }
 
+.vis-timeline-chart.summary-chart-visualization .vis-data-axis {
+  visibility: hidden;
+}
+
 
 .vis-timeline {
   position: relative;
@@ -399,10 +403,6 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
 
 .vis-panel > .vis-content {
   position: relative;
-}
-
-.vis-panel.vis-left .vis-content {
-  display: flex;
 }
 
 .vis-panel .vis-shadow {
@@ -749,9 +749,6 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
   border-color: #bfbfbf;
 }
 
-.vis-data-axis {
-  position: relative;
-}
 
 .vis-data-axis .vis-y-axis.vis-major {
   width: 100%;
@@ -827,10 +824,6 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
   transform: rotate(90deg);
 }
 
-.vis-data-axis .vis-y-axis.vis-timeline-chart-y-axis{
-  position: absolute;
-}
-
 .vis-legend {
   background-color: rgba(247, 252, 255, 0.65);
   padding: 5px;
@@ -843,27 +836,6 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
   white-space: nowrap;
   display: inline-block
 }
-
-.vis-data-axis {
-  position: relative;
-}
-
-.vis-data-axis .vis-y-axis.vis-timeline-chart-y-axis{
-  position: aboslute;
-}
-
-.summary-content.vis-timeline-chart .vis-panel.vis-left .vis-content .vis-data-axis.hovered {
-  background-color: #F2F2F2 !important;
-}
-
-.vis-point.opaque{
-  opacity: 0.3;
-}
-
-.vis-panel.vis-left .vis-content .vis-data-axis .cell.hovered {
-  background-color: #F2F2F2 !important;
-}
-
 .vis-graph-group0 {
     fill:#4f81bd;
     fill-opacity:0;
