@@ -41,6 +41,7 @@
 
 .vis-panel.vis-left .vis-content {
   display: flex;
+  justify-content: flex-end;
 }
 
 .vis-panel .vis-shadow {
