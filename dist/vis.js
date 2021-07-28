@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-07-27
+ * @date    2021-07-28
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -28394,7 +28394,13 @@ return /******/ (function(modules) { // webpackBootstrap
     this.id = util.randomUUID();
     this.body = body;
     var dataRegionTimeline = document.querySelector('.data-region.data-container-with-timeline');
-
+    var width = 0;
+    if (this.body.origin === 'flowsheet') {
+      var percentageDataAxis = parseInt(this.body.summaryWidth);
+      width = percentageDataAxis * this.body.dataRegionDatagrid / 100 + 'px';
+    } else {
+      width = dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px';
+    }
     this.defaultOptions = {
       orientation: 'left', // supported: 'left', 'right'
       showMinorLabels: true,
@@ -28406,7 +28412,7 @@ return /******/ (function(modules) { // webpackBootstrap
       labelOffsetX: 10,
       labelOffsetY: 2,
       iconWidth: 20,
-      width: dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px',
+      width: width,
       visible: true,
       alignZeros: true,
       data: undefined,
@@ -30660,6 +30666,8 @@ return /******/ (function(modules) { // webpackBootstrap
         _this.body.reduceRedraw = properties.reduceRedraw;
         _this.body.eventOnDrawn = properties.events ? properties.events.onDrawn : null;
         _this.body.origin = properties.origin;
+        _this.body.summaryWidth = properties.visPropertiesMetadata.summaryWidth;
+        _this.body.dataRegionDatagrid = properties.visPropertiesMetadata.dataRegionDatagrid;
       }
 
       // range
