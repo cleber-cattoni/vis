@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-07-20
+ * @date    2021-07-28
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -24736,6 +24736,8 @@ return /******/ (function(modules) { // webpackBootstrap
    * Repaint the item
    */
   RangeItem.prototype.redraw = function () {
+    var _this = this;
+
     var dom = this.dom;
     if (!dom) {
       // create DOM
@@ -24756,6 +24758,15 @@ return /******/ (function(modules) { // webpackBootstrap
       dom.content.className = 'vis-item-content';
       dom.frame.appendChild(dom.content);
       dom.frame.addEventListener("mouseover", this.mouseoverCallback);
+      if (this.data.ieComplexTooltip) {
+        var debounceTimeOutId = void 0;
+        dom.frame.addEventListener("mouseover", function (event) {
+          clearTimeout(debounceTimeOutId);
+          debounceTimeOutId = setTimeout(function () {
+            return _this.data.mouseOver(event);
+          }, 200);
+        });
+      }
       dom.frame.addEventListener("mouseout", this.mouseoutCallback);
 
       // attach this item as attribute
@@ -28383,7 +28394,13 @@ return /******/ (function(modules) { // webpackBootstrap
     this.id = util.randomUUID();
     this.body = body;
     var dataRegionTimeline = document.querySelector('.data-region.data-container-with-timeline');
-
+    var width = 0;
+    if (this.body.origin === 'flowsheet') {
+      var percentageDataAxis = parseInt(this.body.summaryWidth);
+      width = percentageDataAxis * this.body.dataRegionDatagrid / 100 + 'px';
+    } else {
+      width = dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px';
+    }
     this.defaultOptions = {
       orientation: 'left', // supported: 'left', 'right'
       showMinorLabels: true,
@@ -28395,7 +28412,7 @@ return /******/ (function(modules) { // webpackBootstrap
       labelOffsetX: 10,
       labelOffsetY: 2,
       iconWidth: 20,
-      width: dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px',
+      width: width,
       visible: true,
       alignZeros: true,
       data: undefined,
@@ -29247,6 +29264,7 @@ return /******/ (function(modules) { // webpackBootstrap
     this.usingDefaultStyle = group.className === undefined;
     this.groupsUsingDefaultStyles = groupsUsingDefaultStyles;
     this.zeroPosition = 0;
+    this.withTrend = group.withTrend;
     this.summary = group.summary;
     this.update(group);
     if (this.usingDefaultStyle == true) {
@@ -30648,6 +30666,8 @@ return /******/ (function(modules) { // webpackBootstrap
         _this.body.reduceRedraw = properties.reduceRedraw;
         _this.body.eventOnDrawn = properties.events ? properties.events.onDrawn : null;
         _this.body.origin = properties.origin;
+        _this.body.summaryWidth = properties.visPropertiesMetadata.summaryWidth;
+        _this.body.dataRegionDatagrid = properties.visPropertiesMetadata.dataRegionDatagrid;
       }
 
       // range
@@ -31136,6 +31156,56 @@ return /******/ (function(modules) { // webpackBootstrap
                     case "points":
                       if (group.options.style == "point" || group.options.style == "points" || group.options.drawPoints.enabled == true) {
                         var points = Points.draw(groupsData[groupIds[i]], group, _this2.framework);
+
+                        if (group.withTrend) {
+                          (function () {
+                            var dataLineUp = [];
+                            var dataLineDown = [];
+                            var dataLineMiddle = [];
+                            points.forEach(function (point) {
+                              var pointUp = point[0];
+                              var pointDown = point[2];
+                              var pointMiddle = point[1];
+                              if (pointUp) {
+                                dataLineUp.push({
+                                  screen_x: pointUp.points[3].x,
+                                  screen_y: pointUp.points[0].y
+                                });
+                              }
+
+                              if (pointDown) {
+                                dataLineDown.push({
+                                  screen_x: pointDown.points[3].x,
+                                  screen_y: pointDown.points[0].y
+                                });
+                              }
+
+                              if (pointMiddle) {
+                                dataLineMiddle.push({
+                                  screen_x: pointMiddle.normalizedPathSegList._list[0].x,
+                                  screen_y: pointMiddle.normalizedPathSegList._list[0].y + 2
+                                });
+                              }
+                            });
+
+                            if (dataLineUp && dataLineDown && dataLineMiddle) {
+                              var itemData = groupsData[groupIds[i]].find(function (x) {
+                                return x.referenceLine == false;
+                              });
+                              if (itemData && itemData.styleLine) group.style = itemData.styleLine;
+
+                              var linePathUp = Lines.calcPath(dataLineUp, group);
+                              Lines.draw(linePathUp, group, _this2.framework);
+
+                              var linePathDown = Lines.calcPath(dataLineDown, group);
+                              Lines.draw(linePathDown, group, _this2.framework);
+
+                              var linePathMiddle = Lines.calcPath(dataLineMiddle, group);
+                              Lines.draw(linePathMiddle, group, _this2.framework);
+                            }
+                          })();
+                        }
+
                         DOMutil.attachEvents(points, 'mouseenter', groupsData[groupIds[i]], function (event, element, data) {
                           return callbackFunction('itemmouseenter', event, element, data);
                         });
