@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-07-28
+ * @date    2021-07-30
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -30666,8 +30666,10 @@ return /******/ (function(modules) { // webpackBootstrap
         _this.body.reduceRedraw = properties.reduceRedraw;
         _this.body.eventOnDrawn = properties.events ? properties.events.onDrawn : null;
         _this.body.origin = properties.origin;
-        _this.body.summaryWidth = properties.visPropertiesMetadata.summaryWidth;
-        _this.body.dataRegionDatagrid = properties.visPropertiesMetadata.dataRegionDatagrid;
+        if (properties.visPropertiesMetadata) {
+          _this.body.summaryWidth = properties.visPropertiesMetadata.summaryWidth;
+          _this.body.dataRegionDatagrid = properties.visPropertiesMetadata.dataRegionDatagrid;
+        }
       }
 
       // range
@@ -31166,14 +31168,14 @@ return /******/ (function(modules) { // webpackBootstrap
                               var pointUp = point[0];
                               var pointDown = point[2];
                               var pointMiddle = point[1];
-                              if (pointUp) {
+                              if (pointUp && pointUp.points.length > 3) {
                                 dataLineUp.push({
                                   screen_x: pointUp.points[3].x,
                                   screen_y: pointUp.points[0].y
                                 });
                               }
 
-                              if (pointDown) {
+                              if (pointDown && pointDown.points.length > 3) {
                                 dataLineDown.push({
                                   screen_x: pointDown.points[3].x,
                                   screen_y: pointDown.points[0].y
@@ -31309,7 +31311,7 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: '_convertPointsYcoordinates',
       value: function _convertPointsYcoordinates(datapoints, group, actualY, previousY) {
-        var axis = this.yAxisLeft;
+        var axis = this._getAxisLeft(group.id);
         if (group.options.yAxisOrientation == 'right') {
           axis = this.yAxisRight;
         }
@@ -31319,6 +31321,14 @@ return /******/ (function(modules) { // webpackBootstrap
         var listOfValues = datapoints.map(function (d) {
           return d.y;
         });
+        if (group.summary && group.group.intervalScale) {
+          if (group.group.maxValue != undefined && !listOfValues.includes(group.group.maxValue)) {
+            listOfValues.push(group.group.maxValue);
+          }
+          if (group.group.minValue != undefined && !listOfValues.includes(group.group.minValue)) {
+            listOfValues.push(group.group.minValue);
+          }
+        }
         var range = {
           max: Math.max.apply(Math, _toConsumableArray(listOfValues)),
           min: Math.min.apply(Math, _toConsumableArray(listOfValues))
@@ -31329,28 +31339,20 @@ return /******/ (function(modules) { // webpackBootstrap
           if (range.min === range.max) {
             convertedValue = Math.round(baseScreenY * 50 / 100);
           } else {
-            if (Array.isArray(axis)) {
-              convertedValue = axis[group.id] ? Math.round(axis[group.id].convertValue(datapoints[i].y, range, baseScreenY)) : 0;
-            } else {
-              convertedValue = Math.round(axis.convertValue(datapoints[i].y, range, baseScreenY));
-            }
+            convertedValue = Math.round(axis.convertValue(datapoints[i].y, range, baseScreenY));
           }
           datapoints[i].screen_y = actualY - offset / 2 - convertedValue;
         }
         if (range.min === range.max) {
           group.zeroPosition = actualY - offset / 2 - Math.round(baseScreenY * 50 / 100);
         } else {
-          if (Array.isArray(axis)) {
-            group.zeroPosition = axis[group.id] ? actualY - offset / 2 - Math.round(axis[group.id].convertValue(range.min, range, baseScreenY)) : 0;
-          } else {
-            group.zeroPosition = actualY - offset / 2 - Math.round(axis.convertValue(range.min, range, baseScreenY));
-          }
+          group.zeroPosition = actualY - offset / 2 - Math.round(axis.convertValue(range.min, range, baseScreenY));
         }
       }
     }, {
       key: '_convertAvgYcoordinates',
       value: function _convertAvgYcoordinates(datapoints, group, actualY, previousY) {
-        var axis = this.yAxisLeft;
+        var axis = this._getAxisLeft(group.id);
         if (group.options.yAxisOrientation == 'right') {
           axis = this.yAxisRight;
         }
@@ -31365,8 +31367,8 @@ return /******/ (function(modules) { // webpackBootstrap
         var baseGraphHeight = actualY - previousY;
         var padding = _Constants.TIMELINE_CHART_PADDINGS.calculatePadding(baseGraphHeight);
         var range = {
-          max: Math.max.apply(Math, _toConsumableArray(listOfMaxValues)),
-          min: Math.min.apply(Math, _toConsumableArray(listOfMinValues))
+          max: group.summary && group.group.maxValue ? group.group.maxValue : Math.max.apply(Math, _toConsumableArray(listOfMaxValues)),
+          min: group.summary && group.group.minValue ? group.group.minValue : Math.min.apply(Math, _toConsumableArray(listOfMinValues))
         };
 
         for (var i = 0; i < datapoints.length; i++) {
@@ -31377,11 +31379,7 @@ return /******/ (function(modules) { // webpackBootstrap
             var difference = maxValue - minValue;
             convertedValue = Math.round(baseScreenY * 50 / 100);
             if (datapoints[i].referenceLine) {
-              if (Array.isArray(axis)) {
-                convertedValue = axis[group.id] ? Math.round(axis[group.id].convertValue(datapoints[i].y, range, baseScreenY)) : 0;
-              } else {
-                convertedValue = Math.round(axis.convertValue(datapoints[i].y, range, baseScreenY));
-              }
+              convertedValue = Math.round(axis.convertValue(datapoints[i].y, range, baseScreenY));
             }
             datapoints[i].screen_y = actualY - offset / 2 - convertedValue;
 
