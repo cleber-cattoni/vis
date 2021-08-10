@@ -858,11 +858,11 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
 }
 
 .vis-point.opaque{
-  opacity: 0.3;
+  opacity: 0.025;
 }
 
 path.opaque {
-  stroke-opacity: 0.3;
+  stroke-opacity: 0.025;
 }
 
 .vis-panel.vis-left .vis-content .vis-data-axis .cell.hovered {
