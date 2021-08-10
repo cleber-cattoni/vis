@@ -7776,6 +7776,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         var _polygonDown = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
         _polygonDown.setAttributeNS(null, 'points', downLeftPt + ' ' + downRightPt + ' ' + downBottomPt + ' ' + downLineToCenterPt + ' ' + downBottomPt + ' ' + downLeftPt);
+        _polygonDown.setAttributeNS(null, 'polygon-type', 'down');
 
         // CROSS (middle)
         var crossVerticalLine = 'M ' + x + ',' + (y - crossHalfSize) + ' L ' + x + ',' + (y + crossHalfSize);
@@ -7783,6 +7784,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         var polygonCross = exports.getSVGElement('path', JSONcontainer, svgContainer);
         polygonCross.setAttributeNS(null, 'd', crossVerticalLine + ' ' + crossHorizontalLine);
+        polygonCross.setAttributeNS(null, 'polygon-type', 'cross');
 
         // AVG ARROW UP (bottom side)
         var upLeftPt = x - directionArrow.height + ',' + (y + arrowAvgHeight - strokeWidth);
@@ -7792,6 +7794,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         var _polygonUp = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
         _polygonUp.setAttributeNS(null, 'points', upLeftPt + ' ' + upRightPt + ' ' + upTopPt + ' ' + upLineToCenterPt + ' ' + upTopPt + ' ' + upLeftPt);
+        _polygonUp.setAttributeNS(null, 'polygon-type', 'up');
 
         if (groupTemplate.styles !== undefined) {
           _polygonDown.setAttributeNS(null, "style", groupTemplate.styles);
@@ -7861,6 +7864,12 @@ return /******/ (function(modules) { // webpackBootstrap
         point.setAttributeNS(null, "tooltip", labelObj.tooltip);
       }
       point.setAttributeNS(null, 'row-id', groupTemplate.rowId);
+      var id = groupTemplate.rowId + '-' + groupTemplate.style + '-' + props.index;
+      var polygonType = point.getAttribute('polygon-type');
+      if (polygonType) {
+        id = id.concat('-' + polygonType); // without this we can't set the ID in the "use" tag
+      }
+      point.setAttributeNS(null, 'id', id);
     });
 
     return points;
@@ -29722,6 +29731,7 @@ return /******/ (function(modules) { // webpackBootstrap
         size: d.prop && d.prop.size || 0,
         baseY: d.prop && d.prop.baseY || 0,
         baseHeight: d.prop && d.prop.baseHeight || 0,
+        index: i,
         alertMin: d.alertMin,
         alertMax: d.alertMax,
         alertMed: d.alertMed,
@@ -31679,7 +31689,7 @@ return /******/ (function(modules) { // webpackBootstrap
           label.style.textAlign = "left";
         }
 
-        label.style.top = y - 0.5 * characterHeight + this.options.labelOffsetY + 'px';
+        label.style.top = y + 'px';
 
         text += '';
 
@@ -31705,13 +31715,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 62 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
   'use strict';
 
   var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-  var _Constants = __webpack_require__(8);
 
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -31793,7 +31801,7 @@ return /******/ (function(modules) { // webpackBootstrap
             bottomLabelY = _getSupportLabels3.bottomLabelY;
 
         if (maxValue === minValue || avgValue) {
-          var label = avgValue !== undefined ? avgValue : maxValue;
+          var label = avgValue !== '' ? avgValue : maxValue;
           this._redrawLabel(lineHeight - middleLabelY, label, orientation, labelClass, this.props.minorCharHeight);
         } else {
           this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
@@ -31804,12 +31812,12 @@ return /******/ (function(modules) { // webpackBootstrap
       key: '_getSupportLabels',
       value: function _getSupportLabels(y, previousY) {
         var size = y - previousY;
-        var labelOffsetY = this.options.labelOffsetY * -1;
-        var topLabelY = size - size * _Constants.TIMELINE_CHART_PADDINGS.top + labelOffsetY;
-        var middleLabelY = size * 50 / 100 + labelOffsetY;
-        var bottomLabelY = size * _Constants.TIMELINE_CHART_PADDINGS.bottom + labelOffsetY;
 
-        return { topLabelY: topLabelY, middleLabelY: middleLabelY, bottomLabelY: bottomLabelY };
+        return {
+          topLabelY: size,
+          middleLabelY: size / 2 + this.props.minorCharHeight / 2,
+          bottomLabelY: this.props.minorCharHeight
+        };
       }
     }, {
       key: '_renderLineLabelWithScale',
@@ -31823,13 +31831,12 @@ return /******/ (function(modules) { // webpackBootstrap
             avgValue = _ref.avgValue,
             referenceLine = _ref.referenceLine;
 
-        var labelHeight = 10;
-        var internHeight = lineHeight - labelHeight * 2;
-        var offset = labelHeight / 2;
-        var amountLabelsToFit = Math.floor(internHeight / labelHeight);
+        var internHeight = lineHeight - this.props.minorCharHeight * 2;
+        var offset = 0;
+        var amountLabelsToFit = Math.floor(internHeight / this.props.minorCharHeight);
         var intervalScale = group.group.intervalScale;
         var amountLabels = Math.floor((maxValue - minValue) / intervalScale) - 1; // Remove one that is max label
-        var position = lineHeight - offset;
+        var position = lineHeight - this.props.minorCharHeight;
         var label = minValue;
 
         // Divides the number of labels to fit the available height
@@ -31850,11 +31857,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
         if (amountLabels && amountLabelsToFit > 0) {
           var scaleDistance = Math.abs(maxValue - minValue);
-          var intervalHeight = intervalScale / scaleDistance * (internHeight - amountLabels * labelHeight);
+          var intervalHeight = intervalScale / scaleDistance * (internHeight - amountLabels * this.props.minorCharHeight);
 
           for (var i = 0; i < amountLabels && amountLabelsToFit > 0; i++) {
             label = label + intervalScale;
-            position = position - intervalHeight - labelHeight;
+            position = position - intervalHeight - this.props.minorCharHeight;
 
             this._redrawLabel(position, label, orientation, labelClass, this.props.minorCharHeight);
           }
@@ -31893,7 +31900,7 @@ return /******/ (function(modules) { // webpackBootstrap
         }
 
         var groupAvgValue = group.itemsData[0] && group.itemsData[0].avgValue;
-        var avgValue = groupAvgValue !== undefined ? groupAvgValue : undefined;
+        var avgValue = groupAvgValue !== undefined ? groupAvgValue : '';
 
         var referenceLine = group.itemsData.map(function (item) {
           return item.referenceLine && item.y;
@@ -31915,13 +31922,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 63 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
   'use strict';
 
   var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-  var _Constants = __webpack_require__(8);
 
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -32004,11 +32009,11 @@ return /******/ (function(modules) { // webpackBootstrap
       value: function _getSupportLines(y, previousY) {
         var size = y - previousY;
 
-        var topLineY = size - size * _Constants.TIMELINE_CHART_PADDINGS.top;
-        var middleLineY = size * 50 / 100;
-        var bottomLineY = size * _Constants.TIMELINE_CHART_PADDINGS.bottom;
-
-        return { topLineY: topLineY, middleLineY: middleLineY, bottomLineY: bottomLineY };
+        return {
+          topLineY: size,
+          middleLineY: size / 2 + this.props.minorCharHeight / 2,
+          bottomLineY: this.props.minorCharHeight
+        };
       }
     }]);
 
