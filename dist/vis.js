@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-08-06
+ * @date    2021-08-10
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -7793,6 +7793,26 @@ return /******/ (function(modules) { // webpackBootstrap
         var _polygonUp = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
         _polygonUp.setAttributeNS(null, 'points', upLeftPt + ' ' + upRightPt + ' ' + upTopPt + ' ' + upLineToCenterPt + ' ' + upTopPt + ' ' + upLeftPt);
 
+        if (groupTemplate.styles !== undefined) {
+          _polygonDown.setAttributeNS(null, "style", groupTemplate.styles);
+          polygonCross.setAttributeNS(null, "style", groupTemplate.styles);
+          _polygonUp.setAttributeNS(null, "style", groupTemplate.styles);
+        }
+
+        if (props.alertMin) {
+          _polygonUp.style.stroke = props.alertColor;
+          _polygonUp.style.fill = '#FFFFFF';
+        }
+
+        if (props.alertMax) {
+          _polygonDown.style.stroke = props.alertColor;
+          _polygonDown.style.fill = '#FFFFFF';
+        }
+
+        if (props.alertMed) {
+          polygonCross.style.stroke = props.alertColor;
+        }
+
         points.push(_polygonDown);
         points.push(polygonCross);
         points.push(_polygonUp);
@@ -7831,7 +7851,7 @@ return /******/ (function(modules) { // webpackBootstrap
     }
 
     points.forEach(function (point) {
-      if (groupTemplate.styles !== undefined) {
+      if (groupTemplate.styles !== undefined && groupTemplate.style !== 'arrow-avg') {
         point.setAttributeNS(null, "style", groupTemplate.styles);
       }
 
@@ -27636,6 +27656,10 @@ return /******/ (function(modules) { // webpackBootstrap
       extended.styleLine = _item.styleLine;
       extended.stylePoint = _item.stylePoint;
       extended.referenceLine = _item.referenceLine;
+      extended.alertMin = _item.alertMin;
+      extended.alertMax = _item.alertMax;
+      extended.alertMed = _item.alertMed;
+      extended.alertColor = _item.alertColor;
 
       var index = groupsContent[_groupId].length - groupCounts[_groupId]--;
       groupsContent[_groupId][index] = extended;
@@ -29665,7 +29689,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
-  'use strict';
+  "use strict";
 
   var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
@@ -29697,18 +29721,22 @@ return /******/ (function(modules) { // webpackBootstrap
         minValue: d.minValue,
         size: d.prop && d.prop.size || 0,
         baseY: d.prop && d.prop.baseY || 0,
-        baseHeight: d.prop && d.prop.baseHeight || 0
+        baseHeight: d.prop && d.prop.baseHeight || 0,
+        alertMin: d.alertMin,
+        alertMax: d.alertMax,
+        alertMed: d.alertMed,
+        alertColor: d.alertColor
       };
       if (d.referenceLine) continue;
       if (!callback) {
         var itemTrend = null;
-        if (group.id.indexOf("trend") > -1) itemTrend = dataset[i];
+        if (group.id.indexOf("trend") > -1 || group.id.indexOf("arrow-avg") > -1 && group.withTrend) itemTrend = dataset[i];
 
         // draw the point the simple way.
         point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, undefined, itemTrend), framework.svgElements, framework.svg, dataset[i].label, props);
       } else {
         var callbackResult = callback(dataset[i], group); // result might be true, false or an object
-        if (callbackResult === true || (typeof callbackResult === 'undefined' ? 'undefined' : _typeof(callbackResult)) === 'object') {
+        if (callbackResult === true || (typeof callbackResult === "undefined" ? "undefined" : _typeof(callbackResult)) === 'object') {
           point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, callbackResult), framework.svgElements, framework.svg, dataset[i].label, props);
         }
       }
@@ -31320,8 +31348,11 @@ return /******/ (function(modules) { // webpackBootstrap
         var baseScreenY = actualY - previousY - offset;
         var listOfValues = datapoints.map(function (d) {
           return d.y;
-        });
-        if (group.summary && group.group.intervalScale) {
+        }).filter(function (value, index, self) {
+          return self.indexOf(value) === index;
+        }).sort();
+
+        if (group.summary && group.group.intervalScale && group.group.minValue !== group.group.maxValue) {
           if (group.group.maxValue != undefined && !listOfValues.includes(group.group.maxValue)) {
             listOfValues.push(group.group.maxValue);
           }
@@ -31716,16 +31747,15 @@ return /******/ (function(modules) { // webpackBootstrap
           return; // exit
         }
 
-        var _calculateMinAndMaxSc = this._calculateMinAndMaxScale(group, true),
-            maxValue = _calculateMinAndMaxSc.maxValue,
-            minValue = _calculateMinAndMaxSc.minValue;
+        var _getGroupScaleValues2 = this._getGroupScaleValues(group, true),
+            maxValue = _getGroupScaleValues2.maxValue,
+            minValue = _getGroupScaleValues2.minValue,
+            avgValue = _getGroupScaleValues2.avgValue;
 
         if (group.summary && group.group && group.group.intervalScale) {
-          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue });
+          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue });
           return; // exit
         }
-
-        var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
 
         var _getSupportLabels2 = this._getSupportLabels(lineHeight, previousY),
             topLabelY = _getSupportLabels2.topLabelY,
@@ -31746,16 +31776,16 @@ return /******/ (function(modules) { // webpackBootstrap
           return; // exit
         }
 
-        var _calculateMinAndMaxSc2 = this._calculateMinAndMaxScale(group),
-            maxValue = _calculateMinAndMaxSc2.maxValue,
-            minValue = _calculateMinAndMaxSc2.minValue;
+        var _getGroupScaleValues3 = this._getGroupScaleValues(group),
+            maxValue = _getGroupScaleValues3.maxValue,
+            minValue = _getGroupScaleValues3.minValue,
+            avgValue = _getGroupScaleValues3.avgValue,
+            referenceLine = _getGroupScaleValues3.referenceLine;
 
         if (group.summary && group.group && group.group.intervalScale) {
-          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue });
+          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue, referenceLine: referenceLine });
           return; // exit
         }
-
-        var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
 
         var _getSupportLabels3 = this._getSupportLabels(lineHeight, previousY, this.options.fontSize),
             topLabelY = _getSupportLabels3.topLabelY,
@@ -31789,7 +31819,9 @@ return /******/ (function(modules) { // webpackBootstrap
             labelClass = _ref.labelClass,
             group = _ref.group,
             maxValue = _ref.maxValue,
-            minValue = _ref.minValue;
+            minValue = _ref.minValue,
+            avgValue = _ref.avgValue,
+            referenceLine = _ref.referenceLine;
 
         var labelHeight = 10;
         var internHeight = lineHeight - labelHeight * 2;
@@ -31806,28 +31838,36 @@ return /******/ (function(modules) { // webpackBootstrap
           intervalScale += intervalScale;
         }
 
-        // Displays a max label aligned on the top
-        this._redrawLabel(offset, maxValue, orientation, labelClass, this.props.minorCharHeight);
+        if (minValue !== undefined && maxValue !== undefined) {
+          if (minValue !== maxValue) {
+            this._redrawLabel(offset, maxValue, orientation, labelClass, this.props.minorCharHeight);
+            this._redrawLabel(position, minValue, orientation, labelClass, this.props.minorCharHeight);
+          } else if (referenceLine !== undefined) {
+            var referenceLineY = lineHeight * 0.5;
+            this._redrawLabel(referenceLineY, referenceLine || avgValue, orientation, labelClass, this.props.minorCharHeight);
+          }
+        }
 
-        // Displays a min label aligned in the footer
-        this._redrawLabel(position, minValue, orientation, labelClass, this.props.minorCharHeight);
+        if (amountLabels && amountLabelsToFit > 0) {
+          var scaleDistance = Math.abs(maxValue - minValue);
+          var intervalHeight = intervalScale / scaleDistance * (internHeight - amountLabels * labelHeight);
 
-        // Calc internal height for number of occurrences
-        var averageHeightAvailable = (internHeight - amountLabels * labelHeight) / (amountLabels + 1);
+          for (var i = 0; i < amountLabels && amountLabelsToFit > 0; i++) {
+            label = label + intervalScale;
+            position = position - intervalHeight - labelHeight;
 
-        for (var i = 0; i < amountLabels && amountLabelsToFit > 0; i++) {
-          label += intervalScale;
-          position -= averageHeightAvailable + labelHeight;
-          this._redrawLabel(position, label, orientation, labelClass, this.props.minorCharHeight);
+            this._redrawLabel(position, label, orientation, labelClass, this.props.minorCharHeight);
+          }
         }
       }
     }, {
-      key: '_calculateMinAndMaxScale',
-      value: function _calculateMinAndMaxScale(group) {
+      key: '_getGroupScaleValues',
+      value: function _getGroupScaleValues(group) {
         var avgLabel = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
         var maxValue = void 0,
             minValue = void 0;
+
         if (avgLabel) {
           maxValue = Math.max.apply(Math, group.itemsData.map(function (item) {
             return item.referenceLine ? item.y : item.maxValue;
@@ -31851,7 +31891,20 @@ return /******/ (function(modules) { // webpackBootstrap
             minValue = group.group.minValue;
           }
         }
-        return { maxValue: maxValue, minValue: minValue };
+
+        var groupAvgValue = group.itemsData[0] && group.itemsData[0].avgValue;
+        var avgValue = groupAvgValue !== undefined ? groupAvgValue : undefined;
+
+        var referenceLine = group.itemsData.map(function (item) {
+          return item.referenceLine && item.y;
+        })[0];
+
+        return {
+          maxValue: maxValue,
+          minValue: minValue,
+          avgValue: avgValue,
+          referenceLine: referenceLine
+        };
       }
     }]);
 
