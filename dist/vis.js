@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-08-10
+ * @date    2021-08-20
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -106,7 +106,7 @@ return /******/ (function(modules) { // webpackBootstrap
   // Timeline
   exports.Timeline = __webpack_require__(20);
   exports.Graph2d = __webpack_require__(49);
-  exports.TimelineChart = __webpack_require__(59);
+  exports.TimelineChart = __webpack_require__(63);
   exports.timeline = {
     Core: __webpack_require__(31),
     DateUtil: __webpack_require__(30),
@@ -127,18 +127,18 @@ return /******/ (function(modules) { // webpackBootstrap
       Component: __webpack_require__(29),
       CurrentTime: __webpack_require__(47),
       CustomTime: __webpack_require__(45),
-      DataAxis: __webpack_require__(51),
-      DataScale: __webpack_require__(52),
-      GraphGroup: __webpack_require__(53),
+      DataAxis: __webpack_require__(53),
+      DataScale: __webpack_require__(54),
+      GraphGroup: __webpack_require__(55),
       Group: __webpack_require__(34),
       ItemSet: __webpack_require__(32),
       Legend: __webpack_require__(57),
       LineGraph: __webpack_require__(50),
       TimeAxis: __webpack_require__(42),
-      DrawLabels: __webpack_require__(62),
-      DrawLines: __webpack_require__(63),
-      TimelineChartDataAxis: __webpack_require__(61),
-      TimelineChartLineGraph: __webpack_require__(60)
+      DrawLabels: __webpack_require__(59),
+      DrawLines: __webpack_require__(60),
+      TimelineChartDataAxis: __webpack_require__(58),
+      TimelineChartLineGraph: __webpack_require__(64)
     }
   };
 
@@ -24789,9 +24789,13 @@ return /******/ (function(modules) { // webpackBootstrap
       dom.frame.addEventListener("mouseover", this.mouseoverCallback);
       if (this.data.ieComplexTooltip) {
         var debounceTimeOutId = void 0;
-        dom.frame.addEventListener("mouseover", function (event) {
+        dom.frame.addEventListener("mouseenter", function (event) {
           clearTimeout(debounceTimeOutId);
           debounceTimeOutId = setTimeout(function () {
+            if (event.target.querySelector('.editing-cell-component:not(.ng-hide)')) {
+              // the cell is being edited
+              return;
+            }
             return _this.data.mouseOver(event);
           }, 200);
         });
@@ -26887,8 +26891,8 @@ return /******/ (function(modules) { // webpackBootstrap
   var LineGraph = __webpack_require__(50);
 
   var printStyle = __webpack_require__(27).printStyle;
-  var allOptions = __webpack_require__(58).allOptions;
-  var configureOptions = __webpack_require__(58).configureOptions;
+  var allOptions = __webpack_require__(62).allOptions;
+  var configureOptions = __webpack_require__(62).configureOptions;
 
   /**
    * Create a timeline visualization
@@ -27214,17 +27218,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
   var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-  var util = __webpack_require__(1);
+  var Bars = __webpack_require__(51);
+  var Component = __webpack_require__(29);
   var DOMutil = __webpack_require__(7);
+  var DataAxis = __webpack_require__(53);
   var DataSet = __webpack_require__(9);
   var DataView = __webpack_require__(11);
-  var Component = __webpack_require__(29);
-  var DataAxis = __webpack_require__(51);
-  var GraphGroup = __webpack_require__(53);
+  var GraphGroup = __webpack_require__(55);
   var Legend = __webpack_require__(57);
-  var Bars = __webpack_require__(54);
   var Lines = __webpack_require__(56);
-  var Points = __webpack_require__(55);
+  var Points = __webpack_require__(52);
+  var TimelineChartDataAxis = __webpack_require__(58);
+  var util = __webpack_require__(1);
 
   var UNGROUPED = '__ungrouped__'; // reserved group id for ungrouped items
 
@@ -27324,7 +27329,6 @@ return /******/ (function(modules) { // webpackBootstrap
     this.groupsUsingDefaultStyles = [0];
     this.body.emitter.on('rangechanged', function () {
       me.lastStart = me.body.range.start;
-      me.svg.style.left = util.option.asSize(-me.props.width);
 
       me.forceGraphUpdate = true;
       //Is this local redraw necessary? (Core also does a change event!)
@@ -27707,6 +27711,7 @@ return /******/ (function(modules) { // webpackBootstrap
               }
             } else {
               (function () {
+                _this4._insertYAxisLeft(groupId);
                 var group = undefined;
                 if (_this4.groupsData !== undefined) {
                   group = _this4.groupsData.get(groupId);
@@ -27749,11 +27754,8 @@ return /******/ (function(modules) { // webpackBootstrap
     var zoomed = visibleInterval !== this.lastVisibleInterval;
     this.lastVisibleInterval = visibleInterval;
 
-    // the svg element is three times as big as the width, this allows for fully dragging left and right
-    // without reloading the graph. the controls for this are bound to events in the constructor
     if (resized === true) {
-      this.svg.style.width = util.option.asSize(3 * this.props.width);
-      this.svg.style.left = util.option.asSize(-this.props.width);
+      this.svg.style.width = util.option.asSize(this.props.width);
 
       // if the height of the graph is set as proportional, change the height of the svg
       if ((this.options.height + '').indexOf("%") !== -1 || this.updateSVGheightOnResize === true) {
@@ -27776,18 +27778,8 @@ return /******/ (function(modules) { // webpackBootstrap
     if (resized === true || zoomed === true || this.abortedGraphUpdate === true || this.forceGraphUpdate === true) {
       resized = this._updateGraph() || resized;
       this.forceGraphUpdate = false;
-    } else {
-      // move the whole svg while dragging
-      if (this.lastStart !== 0) {
-        var offset = this.body.range.start - this.lastStart;
-        var range = this.body.range.end - this.body.range.start;
-        if (this.props.width !== 0) {
-          var rangePerPixelInv = this.props.width / range;
-          var xOffset = offset * rangePerPixelInv;
-          this.svg.style.left = -this.props.width - xOffset + 'px';
-        }
-      }
     }
+
     if (this.body.reduceRedraw && !resized) {
       if (this.body.eventOnDrawn) {
         this.body.eventOnDrawn();
@@ -28278,10 +28270,15 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   LineGraph.prototype._convertXcoordinates = function (datapoints) {
-    var toScreen = this.body.util.toScreen;
-
     for (var i = 0; i < datapoints.length; i++) {
-      if (this.body.range.options.gap === 0) datapoints[i].screen_x = this.props.width + this._calculateGapPositionVIS(datapoints[i].x);else datapoints[i].screen_x = toScreen(datapoints[i].x) + this.props.width;
+      if (this.body.range.options.gap === 0) {
+        datapoints[i].screen_x = this.props.width + this._calculateGapPositionVIS(datapoints[i].x);
+      } else {
+        var factor = this.body.range.end - this.body.range.start;
+        var xToPercent = (datapoints[i].x.getTime() - this.body.range.start) * 100 / factor;
+        xToPercent = Number.isNaN(xToPercent) ? 0 : xToPercent;
+        datapoints[i].screen_x = (this.props.width - 35) * xToPercent / 100;
+      }
 
       datapoints[i].screen_y = datapoints[i].y; //starting point for range calculations
     }
@@ -28402,6 +28399,29 @@ return /******/ (function(modules) { // webpackBootstrap
     return this.yAxisLeft[Object.keys(this.yAxisLeft)[0]];
   };
 
+  /**
+   * Update Axis Left according Group Data.
+   * In case of group not summary, must be just one axis.
+   *
+   * @param {String} groupId
+   * @param {Boolean} groupSummary
+   * @param {Boolean} timeline
+   * @private
+   */
+  LineGraph.prototype._insertYAxisLeft = function (groupId) {
+    var groupSummary = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    var timeline = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+    if (groupSummary || Object.keys(this.yAxisLeft).length === 0) {
+      var axisArguments = [this.body, this.options.dataAxis, this.svg, this.options.groups];
+      var axis = new (Function.prototype.bind.apply(DataAxis, [null].concat(axisArguments)))();
+      if (timeline) {
+        axis = new (Function.prototype.bind.apply(TimelineChartDataAxis, [null].concat(axisArguments)))();
+      }
+      this.yAxisLeft[groupId] = axis;
+    }
+  };
+
   module.exports = LineGraph;
 
 /***/ }),
@@ -28410,10 +28430,380 @@ return /******/ (function(modules) { // webpackBootstrap
 
   'use strict';
 
+  var DOMutil = __webpack_require__(7);
+  var Points = __webpack_require__(52);
+
+  function Bargraph(groupId, options) {}
+
+  Bargraph.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
+    var fillHeight = iconHeight * 0.5;
+    var path, fillPath;
+
+    var outline = DOMutil.getSVGElement("rect", framework.svgElements, framework.svg);
+    outline.setAttributeNS(null, "x", x);
+    outline.setAttributeNS(null, "y", y - fillHeight);
+    outline.setAttributeNS(null, "width", iconWidth);
+    outline.setAttributeNS(null, "height", 2 * fillHeight);
+    outline.setAttributeNS(null, "class", "vis-outline");
+
+    var barWidth = Math.round(0.3 * iconWidth);
+    var originalWidth = group.options.barChart.width;
+    var scale = originalWidth / barWidth;
+    var bar1Height = Math.round(0.4 * iconHeight);
+    var bar2Height = Math.round(0.75 * iconHeight);
+
+    var offset = Math.round((iconWidth - 2 * barWidth) / 3);
+
+    DOMutil.drawBar(x + 0.5 * barWidth + offset, y + fillHeight - bar1Height - 1, barWidth, bar1Height, group.className + ' vis-bar', framework.svgElements, framework.svg, group.style);
+    DOMutil.drawBar(x + 1.5 * barWidth + offset + 2, y + fillHeight - bar2Height - 1, barWidth, bar2Height, group.className + ' vis-bar', framework.svgElements, framework.svg, group.style);
+
+    if (group.options.drawPoints.enabled == true) {
+      var groupTemplate = {
+        style: group.options.drawPoints.style,
+        styles: group.options.drawPoints.styles,
+        size: group.options.drawPoints.size / scale,
+        width: group.options.drawPoints.width,
+        height: group.options.drawPoints.height,
+        className: group.className
+      };
+      DOMutil.drawPoint(x + 0.5 * barWidth + offset, y + fillHeight - bar1Height - 1, groupTemplate, framework.svgElements, framework.svg);
+      DOMutil.drawPoint(x + 1.5 * barWidth + offset + 2, y + fillHeight - bar2Height - 1, groupTemplate, framework.svgElements, framework.svg);
+    }
+  };
+
+  /**
+   * draw a bar graph
+   *
+   * @param groupIds
+   * @param processedGroupData
+   */
+  Bargraph.draw = function (groupIds, processedGroupData, framework) {
+    var combinedData = [];
+    var intersections = {};
+    var coreDistance;
+    var key, drawData;
+    var group;
+    var i, j;
+    var barPoints = 0;
+
+    // combine all barchart data
+    for (i = 0; i < groupIds.length; i++) {
+      group = framework.groups[groupIds[i]];
+      if (group.options.style === 'bar') {
+        if (group.visible === true && (framework.options.groups.visibility[groupIds[i]] === undefined || framework.options.groups.visibility[groupIds[i]] === true)) {
+          for (j = 0; j < processedGroupData[groupIds[i]].length; j++) {
+            combinedData.push({
+              screen_x: processedGroupData[groupIds[i]][j].screen_x,
+              screen_y: processedGroupData[groupIds[i]][j].screen_y,
+              x: processedGroupData[groupIds[i]][j].x,
+              y: processedGroupData[groupIds[i]][j].y,
+              groupId: groupIds[i],
+              label: processedGroupData[groupIds[i]][j].label
+            });
+            barPoints += 1;
+          }
+        }
+      }
+    }
+
+    if (barPoints === 0) {
+      return;
+    }
+
+    // sort by time and by group
+    combinedData.sort(function (a, b) {
+      if (a.screen_x === b.screen_x) {
+        return a.groupId < b.groupId ? -1 : 1;
+      } else {
+        return a.screen_x - b.screen_x;
+      }
+    });
+
+    // get intersections
+    Bargraph._getDataIntersections(intersections, combinedData);
+
+    // plot barchart
+    for (i = 0; i < combinedData.length; i++) {
+      group = framework.groups[combinedData[i].groupId];
+      var minWidth = group.options.barChart.minWidth != undefined ? group.options.barChart.minWidth : 0.1 * group.options.barChart.width;
+
+      key = combinedData[i].screen_x;
+      var heightOffset = 0;
+      if (intersections[key] === undefined) {
+        if (i + 1 < combinedData.length) {
+          coreDistance = Math.abs(combinedData[i + 1].screen_x - key);
+        }
+        drawData = Bargraph._getSafeDrawData(coreDistance, group, minWidth);
+      } else {
+        var nextKey = i + (intersections[key].amount - intersections[key].resolved);
+        var prevKey = i - (intersections[key].resolved + 1);
+        if (nextKey < combinedData.length) {
+          coreDistance = Math.abs(combinedData[nextKey].screen_x - key);
+        }
+        drawData = Bargraph._getSafeDrawData(coreDistance, group, minWidth);
+        intersections[key].resolved += 1;
+
+        if (group.options.stack === true && group.options.excludeFromStacking !== true) {
+          if (combinedData[i].screen_y < group.zeroPosition) {
+            heightOffset = intersections[key].accumulatedNegative;
+            intersections[key].accumulatedNegative += group.zeroPosition - combinedData[i].screen_y;
+          } else {
+            heightOffset = intersections[key].accumulatedPositive;
+            intersections[key].accumulatedPositive += group.zeroPosition - combinedData[i].screen_y;
+          }
+        } else if (group.options.barChart.sideBySide === true) {
+          drawData.width = drawData.width / intersections[key].amount;
+          drawData.offset += intersections[key].resolved * drawData.width - 0.5 * drawData.width * (intersections[key].amount + 1);
+        }
+      }
+      DOMutil.drawBar(combinedData[i].screen_x + drawData.offset, combinedData[i].screen_y - heightOffset, drawData.width, group.zeroPosition - combinedData[i].screen_y, group.className + ' vis-bar', framework.svgElements, framework.svg, group.style);
+      // draw points
+      if (group.options.drawPoints.enabled === true) {
+        var pointData = {
+          screen_x: combinedData[i].screen_x,
+          screen_y: combinedData[i].screen_y - heightOffset,
+          x: combinedData[i].x,
+          y: combinedData[i].y,
+          groupId: combinedData[i].groupId,
+          label: combinedData[i].label
+        };
+        Points.draw([pointData], group, framework, drawData.offset);
+        //DOMutil.drawPoint(combinedData[i].x + drawData.offset, combinedData[i].y, group, framework.svgElements, framework.svg);
+      }
+    }
+  };
+
+  /**
+   * Fill the intersections object with counters of how many datapoints share the same x coordinates
+   * @param intersections
+   * @param combinedData
+   * @private
+   */
+  Bargraph._getDataIntersections = function (intersections, combinedData) {
+    // get intersections
+    var coreDistance;
+    for (var i = 0; i < combinedData.length; i++) {
+      if (i + 1 < combinedData.length) {
+        coreDistance = Math.abs(combinedData[i + 1].screen_x - combinedData[i].screen_x);
+      }
+      if (i > 0) {
+        coreDistance = Math.min(coreDistance, Math.abs(combinedData[i - 1].screen_x - combinedData[i].screen_x));
+      }
+      if (coreDistance === 0) {
+        if (intersections[combinedData[i].screen_x] === undefined) {
+          intersections[combinedData[i].screen_x] = {
+            amount: 0,
+            resolved: 0,
+            accumulatedPositive: 0,
+            accumulatedNegative: 0
+          };
+        }
+        intersections[combinedData[i].screen_x].amount += 1;
+      }
+    }
+  };
+
+  /**
+   * Get the width and offset for bargraphs based on the coredistance between datapoints
+   *
+   * @param coreDistance
+   * @param group
+   * @param minWidth
+   * @returns {{width: Number, offset: Number}}
+   * @private
+   */
+  Bargraph._getSafeDrawData = function (coreDistance, group, minWidth) {
+    var width, offset;
+    if (coreDistance < group.options.barChart.width && coreDistance > 0) {
+      width = coreDistance < minWidth ? minWidth : coreDistance;
+
+      offset = 0; // recalculate offset with the new width;
+      if (group.options.barChart.align === 'left') {
+        offset -= 0.5 * coreDistance;
+      } else if (group.options.barChart.align === 'right') {
+        offset += 0.5 * coreDistance;
+      }
+    } else {
+      // default settings
+      width = group.options.barChart.width;
+      offset = 0;
+      if (group.options.barChart.align === 'left') {
+        offset -= 0.5 * group.options.barChart.width;
+      } else if (group.options.barChart.align === 'right') {
+        offset += 0.5 * group.options.barChart.width;
+      }
+    }
+
+    return { width: width, offset: offset };
+  };
+
+  Bargraph.getStackedYRange = function (combinedData, groupRanges, groupIds, groupLabel, orientation) {
+    if (combinedData.length > 0) {
+      // sort by time and by group
+      combinedData.sort(function (a, b) {
+        if (a.screen_x === b.screen_x) {
+          return a.groupId < b.groupId ? -1 : 1;
+        } else {
+          return a.screen_x - b.screen_x;
+        }
+      });
+      var intersections = {};
+
+      Bargraph._getDataIntersections(intersections, combinedData);
+      groupRanges[groupLabel] = Bargraph._getStackedYRange(intersections, combinedData);
+      groupRanges[groupLabel].yAxisOrientation = orientation;
+      groupIds.push(groupLabel);
+    }
+  };
+
+  Bargraph._getStackedYRange = function (intersections, combinedData) {
+    var key;
+    var yMin = combinedData[0].screen_y;
+    var yMax = combinedData[0].screen_y;
+    for (var i = 0; i < combinedData.length; i++) {
+      key = combinedData[i].screen_x;
+      if (intersections[key] === undefined) {
+        yMin = yMin > combinedData[i].screen_y ? combinedData[i].screen_y : yMin;
+        yMax = yMax < combinedData[i].screen_y ? combinedData[i].screen_y : yMax;
+      } else {
+        if (combinedData[i].screen_y < 0) {
+          intersections[key].accumulatedNegative += combinedData[i].screen_y;
+        } else {
+          intersections[key].accumulatedPositive += combinedData[i].screen_y;
+        }
+      }
+    }
+    for (var xpos in intersections) {
+      if (intersections.hasOwnProperty(xpos)) {
+        yMin = yMin > intersections[xpos].accumulatedNegative ? intersections[xpos].accumulatedNegative : yMin;
+        yMin = yMin > intersections[xpos].accumulatedPositive ? intersections[xpos].accumulatedPositive : yMin;
+        yMax = yMax < intersections[xpos].accumulatedNegative ? intersections[xpos].accumulatedNegative : yMax;
+        yMax = yMax < intersections[xpos].accumulatedPositive ? intersections[xpos].accumulatedPositive : yMax;
+      }
+    }
+
+    return { min: yMin, max: yMax };
+  };
+
+  module.exports = Bargraph;
+
+/***/ }),
+/* 52 */
+/***/ (function(module, exports, __webpack_require__) {
+
+  "use strict";
+
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+  var DOMutil = __webpack_require__(7);
+
+  function Points(groupId, options) {}
+
+  /**
+   * draw the data points
+   *
+   * @param {Array} dataset
+   * @param {Object} JSONcontainer
+   * @param {Object} svg            | SVG DOM element
+   * @param {GraphGroup} group
+   * @param {Number} [offset]
+   */
+  Points.draw = function (dataset, group, framework, offset) {
+    offset = offset || 0;
+
+    var callback = getCallback(framework, group);
+    var points = [];
+
+    for (var i = 0; i < dataset.length; i++) {
+      var point = void 0;
+      var d = dataset[i];
+      var props = {
+        maxValue: d.maxValue,
+        avgValue: d.avgValue,
+        minValue: d.minValue,
+        size: d.prop && d.prop.size || 0,
+        baseY: d.prop && d.prop.baseY || 0,
+        baseHeight: d.prop && d.prop.baseHeight || 0,
+        index: i,
+        alertMin: d.alertMin,
+        alertMax: d.alertMax,
+        alertMed: d.alertMed,
+        alertColor: d.alertColor
+      };
+      if (d.referenceLine) continue;
+      if (!callback) {
+        var itemTrend = null;
+        if (group.id.indexOf("trend") > -1 || group.id.indexOf("arrow-avg") > -1 && group.withTrend) itemTrend = dataset[i];
+
+        // draw the point the simple way.
+        point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, undefined, itemTrend), framework.svgElements, framework.svg, dataset[i].label, props);
+      } else {
+        var callbackResult = callback(dataset[i], group); // result might be true, false or an object
+        if (callbackResult === true || (typeof callbackResult === "undefined" ? "undefined" : _typeof(callbackResult)) === 'object') {
+          point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, callbackResult), framework.svgElements, framework.svg, dataset[i].label, props);
+        }
+      }
+      points.push(point);
+    }
+    return points;
+  };
+
+  Points.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
+    var fillHeight = iconHeight * 0.5;
+    var path, fillPath;
+
+    var outline = DOMutil.getSVGElement("rect", framework.svgElements, framework.svg);
+    outline.setAttributeNS(null, "x", x);
+    outline.setAttributeNS(null, "y", y - fillHeight);
+    outline.setAttributeNS(null, "width", iconWidth);
+    outline.setAttributeNS(null, "height", 2 * fillHeight);
+    outline.setAttributeNS(null, "class", "vis-outline");
+
+    //Don't call callback on icon
+    DOMutil.drawPoint(x + 0.5 * iconWidth, y, getGroupTemplate(group), framework.svgElements, framework.svg);
+  };
+
+  function getGroupTemplate(group, callbackResult, itemTrend) {
+    callbackResult = typeof callbackResult === 'undefined' ? {} : callbackResult;
+    if (!itemTrend) itemTrend = {};
+    return {
+      style: callbackResult.style || group.options.drawPoints.style,
+      styles: itemTrend.stylePoint || callbackResult.styles || group.options.drawPoints.styles,
+      size: callbackResult.size || group.options.drawPoints.size,
+      height: callbackResult.height || group.options.drawPoints.height,
+      width: callbackResult.width || group.options.drawPoints.width,
+      props: callbackResult.props || group.group.props,
+      className: callbackResult.className || group.className,
+      rowId: group.group.value
+    };
+  }
+
+  function getCallback(framework, group) {
+    var callback = undefined;
+    // check for the graph2d onRender
+    if (framework.options && framework.options.drawPoints && framework.options.drawPoints.onRender && typeof framework.options.drawPoints.onRender == 'function') {
+      callback = framework.options.drawPoints.onRender;
+    }
+
+    // override it with the group onRender if defined
+    if (group.group.options && group.group.options.drawPoints && group.group.options.drawPoints.onRender && typeof group.group.options.drawPoints.onRender == 'function') {
+      callback = group.group.options.drawPoints.onRender;
+    }
+    return callback;
+  }
+
+  module.exports = Points;
+
+/***/ }),
+/* 53 */
+/***/ (function(module, exports, __webpack_require__) {
+
+  'use strict';
+
   var util = __webpack_require__(1);
   var DOMutil = __webpack_require__(7);
   var Component = __webpack_require__(29);
-  var DataScale = __webpack_require__(52);
+  var DataScale = __webpack_require__(54);
 
   /**
    * A horizontal time axis
@@ -29013,7 +29403,7 @@ return /******/ (function(modules) { // webpackBootstrap
   module.exports = DataAxis;
 
 /***/ }),
-/* 52 */
+/* 54 */
 /***/ (function(module, exports) {
 
   'use strict';
@@ -29267,7 +29657,7 @@ return /******/ (function(modules) { // webpackBootstrap
   module.exports = DataScale;
 
 /***/ }),
-/* 53 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
   'use strict';
@@ -29276,9 +29666,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
   var util = __webpack_require__(1);
   var DOMutil = __webpack_require__(7);
-  var Bars = __webpack_require__(54);
+  var Bars = __webpack_require__(51);
   var Lines = __webpack_require__(56);
-  var Points = __webpack_require__(55);
+  var Points = __webpack_require__(52);
 
   /**
    * /**
@@ -29430,376 +29820,6 @@ return /******/ (function(modules) { // webpackBootstrap
   };
 
   module.exports = GraphGroup;
-
-/***/ }),
-/* 54 */
-/***/ (function(module, exports, __webpack_require__) {
-
-  'use strict';
-
-  var DOMutil = __webpack_require__(7);
-  var Points = __webpack_require__(55);
-
-  function Bargraph(groupId, options) {}
-
-  Bargraph.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
-    var fillHeight = iconHeight * 0.5;
-    var path, fillPath;
-
-    var outline = DOMutil.getSVGElement("rect", framework.svgElements, framework.svg);
-    outline.setAttributeNS(null, "x", x);
-    outline.setAttributeNS(null, "y", y - fillHeight);
-    outline.setAttributeNS(null, "width", iconWidth);
-    outline.setAttributeNS(null, "height", 2 * fillHeight);
-    outline.setAttributeNS(null, "class", "vis-outline");
-
-    var barWidth = Math.round(0.3 * iconWidth);
-    var originalWidth = group.options.barChart.width;
-    var scale = originalWidth / barWidth;
-    var bar1Height = Math.round(0.4 * iconHeight);
-    var bar2Height = Math.round(0.75 * iconHeight);
-
-    var offset = Math.round((iconWidth - 2 * barWidth) / 3);
-
-    DOMutil.drawBar(x + 0.5 * barWidth + offset, y + fillHeight - bar1Height - 1, barWidth, bar1Height, group.className + ' vis-bar', framework.svgElements, framework.svg, group.style);
-    DOMutil.drawBar(x + 1.5 * barWidth + offset + 2, y + fillHeight - bar2Height - 1, barWidth, bar2Height, group.className + ' vis-bar', framework.svgElements, framework.svg, group.style);
-
-    if (group.options.drawPoints.enabled == true) {
-      var groupTemplate = {
-        style: group.options.drawPoints.style,
-        styles: group.options.drawPoints.styles,
-        size: group.options.drawPoints.size / scale,
-        width: group.options.drawPoints.width,
-        height: group.options.drawPoints.height,
-        className: group.className
-      };
-      DOMutil.drawPoint(x + 0.5 * barWidth + offset, y + fillHeight - bar1Height - 1, groupTemplate, framework.svgElements, framework.svg);
-      DOMutil.drawPoint(x + 1.5 * barWidth + offset + 2, y + fillHeight - bar2Height - 1, groupTemplate, framework.svgElements, framework.svg);
-    }
-  };
-
-  /**
-   * draw a bar graph
-   *
-   * @param groupIds
-   * @param processedGroupData
-   */
-  Bargraph.draw = function (groupIds, processedGroupData, framework) {
-    var combinedData = [];
-    var intersections = {};
-    var coreDistance;
-    var key, drawData;
-    var group;
-    var i, j;
-    var barPoints = 0;
-
-    // combine all barchart data
-    for (i = 0; i < groupIds.length; i++) {
-      group = framework.groups[groupIds[i]];
-      if (group.options.style === 'bar') {
-        if (group.visible === true && (framework.options.groups.visibility[groupIds[i]] === undefined || framework.options.groups.visibility[groupIds[i]] === true)) {
-          for (j = 0; j < processedGroupData[groupIds[i]].length; j++) {
-            combinedData.push({
-              screen_x: processedGroupData[groupIds[i]][j].screen_x,
-              screen_y: processedGroupData[groupIds[i]][j].screen_y,
-              x: processedGroupData[groupIds[i]][j].x,
-              y: processedGroupData[groupIds[i]][j].y,
-              groupId: groupIds[i],
-              label: processedGroupData[groupIds[i]][j].label
-            });
-            barPoints += 1;
-          }
-        }
-      }
-    }
-
-    if (barPoints === 0) {
-      return;
-    }
-
-    // sort by time and by group
-    combinedData.sort(function (a, b) {
-      if (a.screen_x === b.screen_x) {
-        return a.groupId < b.groupId ? -1 : 1;
-      } else {
-        return a.screen_x - b.screen_x;
-      }
-    });
-
-    // get intersections
-    Bargraph._getDataIntersections(intersections, combinedData);
-
-    // plot barchart
-    for (i = 0; i < combinedData.length; i++) {
-      group = framework.groups[combinedData[i].groupId];
-      var minWidth = group.options.barChart.minWidth != undefined ? group.options.barChart.minWidth : 0.1 * group.options.barChart.width;
-
-      key = combinedData[i].screen_x;
-      var heightOffset = 0;
-      if (intersections[key] === undefined) {
-        if (i + 1 < combinedData.length) {
-          coreDistance = Math.abs(combinedData[i + 1].screen_x - key);
-        }
-        drawData = Bargraph._getSafeDrawData(coreDistance, group, minWidth);
-      } else {
-        var nextKey = i + (intersections[key].amount - intersections[key].resolved);
-        var prevKey = i - (intersections[key].resolved + 1);
-        if (nextKey < combinedData.length) {
-          coreDistance = Math.abs(combinedData[nextKey].screen_x - key);
-        }
-        drawData = Bargraph._getSafeDrawData(coreDistance, group, minWidth);
-        intersections[key].resolved += 1;
-
-        if (group.options.stack === true && group.options.excludeFromStacking !== true) {
-          if (combinedData[i].screen_y < group.zeroPosition) {
-            heightOffset = intersections[key].accumulatedNegative;
-            intersections[key].accumulatedNegative += group.zeroPosition - combinedData[i].screen_y;
-          } else {
-            heightOffset = intersections[key].accumulatedPositive;
-            intersections[key].accumulatedPositive += group.zeroPosition - combinedData[i].screen_y;
-          }
-        } else if (group.options.barChart.sideBySide === true) {
-          drawData.width = drawData.width / intersections[key].amount;
-          drawData.offset += intersections[key].resolved * drawData.width - 0.5 * drawData.width * (intersections[key].amount + 1);
-        }
-      }
-      DOMutil.drawBar(combinedData[i].screen_x + drawData.offset, combinedData[i].screen_y - heightOffset, drawData.width, group.zeroPosition - combinedData[i].screen_y, group.className + ' vis-bar', framework.svgElements, framework.svg, group.style);
-      // draw points
-      if (group.options.drawPoints.enabled === true) {
-        var pointData = {
-          screen_x: combinedData[i].screen_x,
-          screen_y: combinedData[i].screen_y - heightOffset,
-          x: combinedData[i].x,
-          y: combinedData[i].y,
-          groupId: combinedData[i].groupId,
-          label: combinedData[i].label
-        };
-        Points.draw([pointData], group, framework, drawData.offset);
-        //DOMutil.drawPoint(combinedData[i].x + drawData.offset, combinedData[i].y, group, framework.svgElements, framework.svg);
-      }
-    }
-  };
-
-  /**
-   * Fill the intersections object with counters of how many datapoints share the same x coordinates
-   * @param intersections
-   * @param combinedData
-   * @private
-   */
-  Bargraph._getDataIntersections = function (intersections, combinedData) {
-    // get intersections
-    var coreDistance;
-    for (var i = 0; i < combinedData.length; i++) {
-      if (i + 1 < combinedData.length) {
-        coreDistance = Math.abs(combinedData[i + 1].screen_x - combinedData[i].screen_x);
-      }
-      if (i > 0) {
-        coreDistance = Math.min(coreDistance, Math.abs(combinedData[i - 1].screen_x - combinedData[i].screen_x));
-      }
-      if (coreDistance === 0) {
-        if (intersections[combinedData[i].screen_x] === undefined) {
-          intersections[combinedData[i].screen_x] = {
-            amount: 0,
-            resolved: 0,
-            accumulatedPositive: 0,
-            accumulatedNegative: 0
-          };
-        }
-        intersections[combinedData[i].screen_x].amount += 1;
-      }
-    }
-  };
-
-  /**
-   * Get the width and offset for bargraphs based on the coredistance between datapoints
-   *
-   * @param coreDistance
-   * @param group
-   * @param minWidth
-   * @returns {{width: Number, offset: Number}}
-   * @private
-   */
-  Bargraph._getSafeDrawData = function (coreDistance, group, minWidth) {
-    var width, offset;
-    if (coreDistance < group.options.barChart.width && coreDistance > 0) {
-      width = coreDistance < minWidth ? minWidth : coreDistance;
-
-      offset = 0; // recalculate offset with the new width;
-      if (group.options.barChart.align === 'left') {
-        offset -= 0.5 * coreDistance;
-      } else if (group.options.barChart.align === 'right') {
-        offset += 0.5 * coreDistance;
-      }
-    } else {
-      // default settings
-      width = group.options.barChart.width;
-      offset = 0;
-      if (group.options.barChart.align === 'left') {
-        offset -= 0.5 * group.options.barChart.width;
-      } else if (group.options.barChart.align === 'right') {
-        offset += 0.5 * group.options.barChart.width;
-      }
-    }
-
-    return { width: width, offset: offset };
-  };
-
-  Bargraph.getStackedYRange = function (combinedData, groupRanges, groupIds, groupLabel, orientation) {
-    if (combinedData.length > 0) {
-      // sort by time and by group
-      combinedData.sort(function (a, b) {
-        if (a.screen_x === b.screen_x) {
-          return a.groupId < b.groupId ? -1 : 1;
-        } else {
-          return a.screen_x - b.screen_x;
-        }
-      });
-      var intersections = {};
-
-      Bargraph._getDataIntersections(intersections, combinedData);
-      groupRanges[groupLabel] = Bargraph._getStackedYRange(intersections, combinedData);
-      groupRanges[groupLabel].yAxisOrientation = orientation;
-      groupIds.push(groupLabel);
-    }
-  };
-
-  Bargraph._getStackedYRange = function (intersections, combinedData) {
-    var key;
-    var yMin = combinedData[0].screen_y;
-    var yMax = combinedData[0].screen_y;
-    for (var i = 0; i < combinedData.length; i++) {
-      key = combinedData[i].screen_x;
-      if (intersections[key] === undefined) {
-        yMin = yMin > combinedData[i].screen_y ? combinedData[i].screen_y : yMin;
-        yMax = yMax < combinedData[i].screen_y ? combinedData[i].screen_y : yMax;
-      } else {
-        if (combinedData[i].screen_y < 0) {
-          intersections[key].accumulatedNegative += combinedData[i].screen_y;
-        } else {
-          intersections[key].accumulatedPositive += combinedData[i].screen_y;
-        }
-      }
-    }
-    for (var xpos in intersections) {
-      if (intersections.hasOwnProperty(xpos)) {
-        yMin = yMin > intersections[xpos].accumulatedNegative ? intersections[xpos].accumulatedNegative : yMin;
-        yMin = yMin > intersections[xpos].accumulatedPositive ? intersections[xpos].accumulatedPositive : yMin;
-        yMax = yMax < intersections[xpos].accumulatedNegative ? intersections[xpos].accumulatedNegative : yMax;
-        yMax = yMax < intersections[xpos].accumulatedPositive ? intersections[xpos].accumulatedPositive : yMax;
-      }
-    }
-
-    return { min: yMin, max: yMax };
-  };
-
-  module.exports = Bargraph;
-
-/***/ }),
-/* 55 */
-/***/ (function(module, exports, __webpack_require__) {
-
-  "use strict";
-
-  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-  var DOMutil = __webpack_require__(7);
-
-  function Points(groupId, options) {}
-
-  /**
-   * draw the data points
-   *
-   * @param {Array} dataset
-   * @param {Object} JSONcontainer
-   * @param {Object} svg            | SVG DOM element
-   * @param {GraphGroup} group
-   * @param {Number} [offset]
-   */
-  Points.draw = function (dataset, group, framework, offset) {
-    offset = offset || 0;
-
-    var callback = getCallback(framework, group);
-    var points = [];
-
-    for (var i = 0; i < dataset.length; i++) {
-      var point = void 0;
-      var d = dataset[i];
-      var props = {
-        maxValue: d.maxValue,
-        avgValue: d.avgValue,
-        minValue: d.minValue,
-        size: d.prop && d.prop.size || 0,
-        baseY: d.prop && d.prop.baseY || 0,
-        baseHeight: d.prop && d.prop.baseHeight || 0,
-        index: i,
-        alertMin: d.alertMin,
-        alertMax: d.alertMax,
-        alertMed: d.alertMed,
-        alertColor: d.alertColor
-      };
-      if (d.referenceLine) continue;
-      if (!callback) {
-        var itemTrend = null;
-        if (group.id.indexOf("trend") > -1 || group.id.indexOf("arrow-avg") > -1 && group.withTrend) itemTrend = dataset[i];
-
-        // draw the point the simple way.
-        point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, undefined, itemTrend), framework.svgElements, framework.svg, dataset[i].label, props);
-      } else {
-        var callbackResult = callback(dataset[i], group); // result might be true, false or an object
-        if (callbackResult === true || (typeof callbackResult === "undefined" ? "undefined" : _typeof(callbackResult)) === 'object') {
-          point = DOMutil.drawPoint(dataset[i].screen_x + offset, dataset[i].screen_y, getGroupTemplate(group, callbackResult), framework.svgElements, framework.svg, dataset[i].label, props);
-        }
-      }
-      points.push(point);
-    }
-    return points;
-  };
-
-  Points.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
-    var fillHeight = iconHeight * 0.5;
-    var path, fillPath;
-
-    var outline = DOMutil.getSVGElement("rect", framework.svgElements, framework.svg);
-    outline.setAttributeNS(null, "x", x);
-    outline.setAttributeNS(null, "y", y - fillHeight);
-    outline.setAttributeNS(null, "width", iconWidth);
-    outline.setAttributeNS(null, "height", 2 * fillHeight);
-    outline.setAttributeNS(null, "class", "vis-outline");
-
-    //Don't call callback on icon
-    DOMutil.drawPoint(x + 0.5 * iconWidth, y, getGroupTemplate(group), framework.svgElements, framework.svg);
-  };
-
-  function getGroupTemplate(group, callbackResult, itemTrend) {
-    callbackResult = typeof callbackResult === 'undefined' ? {} : callbackResult;
-    if (!itemTrend) itemTrend = {};
-    return {
-      style: callbackResult.style || group.options.drawPoints.style,
-      styles: itemTrend.stylePoint || callbackResult.styles || group.options.drawPoints.styles,
-      size: callbackResult.size || group.options.drawPoints.size,
-      height: callbackResult.height || group.options.drawPoints.height,
-      width: callbackResult.width || group.options.drawPoints.width,
-      props: callbackResult.props || group.group.props,
-      className: callbackResult.className || group.className,
-      rowId: group.group.value
-    };
-  }
-
-  function getCallback(framework, group) {
-    var callback = undefined;
-    // check for the graph2d onRender
-    if (framework.options && framework.options.drawPoints && framework.options.drawPoints.onRender && typeof framework.options.drawPoints.onRender == 'function') {
-      callback = framework.options.drawPoints.onRender;
-    }
-
-    // override it with the group onRender if defined
-    if (group.group.options && group.group.options.drawPoints && group.group.options.drawPoints.onRender && typeof group.group.options.drawPoints.onRender == 'function') {
-      callback = group.group.options.drawPoints.onRender;
-    }
-    return callback;
-  }
-
-  module.exports = Points;
 
 /***/ }),
 /* 56 */
@@ -30316,6 +30336,575 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 58 */
+/***/ (function(module, exports, __webpack_require__) {
+
+  'use strict';
+
+  var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+  function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+  function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+  var DOMutil = __webpack_require__(7);
+  var util = __webpack_require__(1);
+  var DataAxis = __webpack_require__(53);
+  var DataScale = __webpack_require__(54);
+  var DrawLabels = __webpack_require__(59);
+  var DrawLines = __webpack_require__(60);
+  var DrawBackground = __webpack_require__(61);
+
+  var TimelineChartDataAxis = function (_DataAxis) {
+    _inherits(TimelineChartDataAxis, _DataAxis);
+
+    function TimelineChartDataAxis(body, options, svg, linegraphOptions) {
+      _classCallCheck(this, TimelineChartDataAxis);
+
+      var _this = _possibleConstructorReturn(this, (TimelineChartDataAxis.__proto__ || Object.getPrototypeOf(TimelineChartDataAxis)).call(this, body, options, svg, linegraphOptions));
+
+      var dataRegionTimeline = document.querySelector('.data-region.data-container-with-timeline');
+
+      _this.defaultOptions = {
+        orientation: 'left', // supported: 'left', 'right'
+        showMinorLabels: true,
+        showMinorLines: true,
+        showMajorLabels: true,
+        icons: false,
+        majorLinesOffset: 7,
+        minorLinesOffset: 4,
+        labelOffsetX: 10,
+        labelOffsetY: 2,
+        iconWidth: 20,
+        width: dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px',
+        visible: true,
+        alignZeros: true,
+        data: undefined,
+        left: {
+          range: { min: undefined, max: undefined },
+          format: function format(value) {
+            return '' + parseFloat(value.toPrecision(3));
+          },
+          title: { text: undefined, style: undefined }
+        },
+        right: {
+          range: { min: undefined, max: undefined },
+          format: function format(value) {
+            return '' + parseFloat(value.toPrecision(3));
+          },
+          title: { text: undefined, style: undefined }
+        }
+      };
+
+      _this.DOMelements.backgrounds = {};
+
+      _this.dataAxisClassName = 'vis-data-axis vis-timeline-chart-data-axis';
+      _this.drawLabels = new DrawLabels(_this._redrawLabel.bind(_this), _this.props, _this.options);
+      _this.drawLines = new DrawLines(_this._redrawLine.bind(_this), _this.props);
+      _this.drawBackground = new DrawBackground(_this.props, _this.dom, _this.DOMelements);
+      return _this;
+    }
+
+    _createClass(TimelineChartDataAxis, [{
+      key: 'setOptions',
+      value: function setOptions(options) {
+        if (options) {
+          var redraw = false;
+          if (this.options.orientation !== options.orientation && options.orientation !== undefined) {
+            redraw = true;
+          }
+          var fields = ['chart', 'orientation', 'showMinorLabels', 'showMinorLines', 'showMajorLabels', 'linesOffsetY', 'linesOffsetX', 'extraLineWidth', 'majorLinesOffset', 'minorLinesOffset', 'labelOffsetX', 'labelOffsetY', 'width', 'visible', 'data', 'left', 'right', 'fontSize'];
+          util.selectiveDeepExtend(fields, this.options, options);
+
+          this.minWidth = Number(('' + this.options.width).replace("px", ""));
+          if (redraw === true && this.dom.frame) {
+            this.hide();
+            this.show();
+          }
+        }
+      }
+    }, {
+      key: '_redrawLabels',
+      value: function _redrawLabels() {
+        var resized = false;
+        this.maxLabelSize = 0;
+
+        var orientation = this.options['orientation'];
+        DOMutil.prepareElements(this.DOMelements.lines);
+        DOMutil.prepareElements(this.DOMelements.labels);
+        DOMutil.prepareElements(this.DOMelements.backgrounds);
+
+        var customRange = this.options[orientation].range !== undefined ? this.options[orientation].range : {};
+
+        //Override range with manual options:
+        var autoScaleEnd = true;
+        if (customRange.max !== undefined && !Number.isNaN(customRange.max)) {
+          this.range.end = customRange.max;
+          autoScaleEnd = false;
+        }
+        var autoScaleStart = true;
+        if (customRange.min !== undefined && !Number.isNaN(customRange.min)) {
+          this.range.start = customRange.min;
+          autoScaleStart = false;
+        }
+
+        this.scale = new DataScale(this.range.start, this.range.end, autoScaleStart, autoScaleEnd, this.dom.frame.offsetHeight, this.props.majorCharHeight, this.options.alignZeros, this.options[orientation].format);
+
+        if (this.master === false && this.masterAxis !== undefined) {
+          this.scale.followScale(this.masterAxis.scale);
+        }
+
+        var offsetY = 1;
+        var y = offsetY;
+        var summaryGroupBackGround = false;
+        for (var keyBg in this.groups) {
+          var group = this.groups[keyBg];
+          if (group.summary && !summaryGroupBackGround || !group.summary) {
+            var previousY = y;
+            y += group.group.rowHeightId['tl-groups_' + group.id];
+
+            this.drawBackground.renderBackground(previousY - offsetY, y - previousY, group.group.value);
+            summaryGroupBackGround = true;
+          }
+        }
+
+        y = offsetY;
+        var summaryLine = false;
+        for (var key in this.groups) {
+          var _group = this.groups[key];
+          if (_group.summary && !summaryLine || !_group.summary) {
+            var _previousY = y;
+            var rowHeight = _group.group.rowHeightId['tl-groups_' + _group.id];
+            y += rowHeight;
+
+            var ySummary = this.height;
+            var yLabel = y;
+            if (_group.summary) {
+              yLabel = this.height;
+            } else {
+              ySummary = 0;
+              for (var s in this.groups) {
+                var grupoSummary = this.groups[s];
+                var rowHeightSummary = grupoSummary.group.rowHeightId['tl-groups_' + grupoSummary.id];
+                ySummary += rowHeightSummary ? rowHeightSummary : 0;
+              }
+            }
+
+            this.drawLabels.renderLabel(yLabel, orientation, _group, _previousY);
+            this.drawLines.renderLine(y, _group, _previousY, ySummary);
+            summaryLine = true;
+          }
+        }
+
+        resized = this.verifyResize(orientation);
+
+        return resized;
+      }
+
+      /**
+      * Create a label for the axis at position x
+      * @override Removed offset in left pixels
+      * @private
+      * @param y
+      * @param text
+      * @param orientation
+      * @param className
+      * @param characterHeight
+      */
+
+    }, {
+      key: '_redrawLabel',
+      value: function _redrawLabel(y, text, orientation, className, characterHeight) {
+        // reuse redundant label
+        var label = DOMutil.getDOMElement('div', this.DOMelements.labels, this.dom.frame); //this.dom.redundant.labels.shift();
+        label.className = className;
+        label.innerHTML = text;
+        if (orientation === 'left') {
+          label.style.textAlign = "right";
+        } else {
+          label.style.textAlign = "left";
+        }
+
+        label.style.top = y + 'px';
+
+        text += '';
+
+        var largestWidth = Math.max(this.props.majorCharWidth, this.props.minorCharWidth);
+        if (this.maxLabelSize < text.length * largestWidth) {
+          this.maxLabelSize = text.length * largestWidth;
+        }
+      }
+    }, {
+      key: 'convertValue',
+      value: function convertValue(y, range, baseY) {
+        var factor = range.max - range.min;
+        var yToPercent = (y - range.min) * 100 / factor;
+        yToPercent = Number.isNaN(yToPercent) ? 0 : yToPercent;
+        return baseY * yToPercent / 100;
+      }
+    }]);
+
+    return TimelineChartDataAxis;
+  }(DataAxis);
+
+  module.exports = TimelineChartDataAxis;
+
+/***/ }),
+/* 59 */
+/***/ (function(module, exports) {
+
+  'use strict';
+
+  var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+  function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+  var DrawLabels = function () {
+    function DrawLabels(redrawLabel, props, options) {
+      _classCallCheck(this, DrawLabels);
+
+      this._redrawLabel = redrawLabel;
+      this.props = props;
+      this.options = options;
+    }
+
+    _createClass(DrawLabels, [{
+      key: 'renderLabel',
+      value: function renderLabel(y, orientation, group, previousY) {
+        var labelClass = 'vis-y-axis vis-timeline-chart-y-axis';
+
+        switch (group.group.type) {
+          case 'arrow-avg':
+            this._renderArrowAvgLabel(y, previousY, orientation, labelClass, group);
+            break;
+          default:
+            this._renderLineLabel(y, previousY, orientation, labelClass, group);
+            break;
+        }
+      }
+    }, {
+      key: '_renderArrowAvgLabel',
+      value: function _renderArrowAvgLabel(lineHeight, previousY, orientation, labelClass, group) {
+        if (!group.itemsData || group.itemsData.length === 0) {
+          return; // exit
+        }
+
+        var _getGroupScaleValues2 = this._getGroupScaleValues(group, true),
+            maxValue = _getGroupScaleValues2.maxValue,
+            minValue = _getGroupScaleValues2.minValue,
+            avgValue = _getGroupScaleValues2.avgValue;
+
+        if (group.summary && group.group && group.group.intervalScale) {
+          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue });
+          return; // exit
+        }
+
+        var _getSupportLabels2 = this._getSupportLabels(lineHeight, previousY),
+            topLabelY = _getSupportLabels2.topLabelY,
+            middleLabelY = _getSupportLabels2.middleLabelY,
+            bottomLabelY = _getSupportLabels2.bottomLabelY;
+
+        this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
+        this._redrawLabel(lineHeight - middleLabelY, avgValue, orientation, labelClass, this.props.minorCharHeight);
+        this._redrawLabel(lineHeight - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
+      }
+    }, {
+      key: '_renderLineLabel',
+      value: function _renderLineLabel(lineHeight, previousY, orientation, labelClass, group) {
+        var values = group.itemsData.map(function (item) {
+          return item.y;
+        });
+        if (values.length === 0) {
+          return; // exit
+        }
+
+        var _getGroupScaleValues3 = this._getGroupScaleValues(group),
+            maxValue = _getGroupScaleValues3.maxValue,
+            minValue = _getGroupScaleValues3.minValue,
+            avgValue = _getGroupScaleValues3.avgValue,
+            referenceLine = _getGroupScaleValues3.referenceLine;
+
+        if (group.summary && group.group && group.group.intervalScale) {
+          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue, referenceLine: referenceLine });
+          return; // exit
+        }
+
+        var _getSupportLabels3 = this._getSupportLabels(lineHeight, previousY, this.options.fontSize),
+            topLabelY = _getSupportLabels3.topLabelY,
+            middleLabelY = _getSupportLabels3.middleLabelY,
+            bottomLabelY = _getSupportLabels3.bottomLabelY;
+
+        if (maxValue === minValue || avgValue) {
+          var label = avgValue !== '' ? avgValue : maxValue;
+          this._redrawLabel(lineHeight - middleLabelY, label, orientation, labelClass, this.props.minorCharHeight);
+        } else {
+          this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
+          this._redrawLabel(lineHeight - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
+        }
+      }
+    }, {
+      key: '_getSupportLabels',
+      value: function _getSupportLabels(y, previousY) {
+        var size = y - previousY;
+
+        return {
+          topLabelY: size,
+          middleLabelY: size / 2 + this.props.minorCharHeight / 2,
+          bottomLabelY: this.props.minorCharHeight
+        };
+      }
+    }, {
+      key: '_renderLineLabelWithScale',
+      value: function _renderLineLabelWithScale(_ref) {
+        var lineHeight = _ref.lineHeight,
+            orientation = _ref.orientation,
+            labelClass = _ref.labelClass,
+            group = _ref.group,
+            maxValue = _ref.maxValue,
+            minValue = _ref.minValue,
+            avgValue = _ref.avgValue,
+            referenceLine = _ref.referenceLine;
+
+        var internHeight = lineHeight - this.props.minorCharHeight * 2;
+        var offset = 0;
+        var amountLabelsToFit = Math.floor(internHeight / this.props.minorCharHeight);
+        var intervalScale = group.group.intervalScale;
+        var amountLabels = Math.floor((maxValue - minValue) / intervalScale) - 1; // Remove one that is max label
+        var position = lineHeight - this.props.minorCharHeight;
+        var label = minValue;
+
+        // Divides the number of labels to fit the available height
+        while (amountLabels > amountLabelsToFit) {
+          amountLabels = Math.floor((amountLabels - 1) / 2);
+          intervalScale += intervalScale;
+        }
+
+        if (minValue !== undefined && maxValue !== undefined) {
+          if (minValue !== maxValue) {
+            this._redrawLabel(offset, maxValue, orientation, labelClass, this.props.minorCharHeight);
+            this._redrawLabel(position, minValue, orientation, labelClass, this.props.minorCharHeight);
+          } else if (referenceLine !== undefined) {
+            var referenceLineY = lineHeight * 0.5;
+            this._redrawLabel(referenceLineY, referenceLine || avgValue, orientation, labelClass, this.props.minorCharHeight);
+          }
+        }
+
+        if (amountLabels && amountLabelsToFit > 0) {
+          var scaleDistance = Math.abs(maxValue - minValue);
+          var intervalHeight = intervalScale / scaleDistance * (internHeight - amountLabels * this.props.minorCharHeight);
+
+          for (var i = 0; i < amountLabels && amountLabelsToFit > 0; i++) {
+            label = label + intervalScale;
+            position = position - intervalHeight - this.props.minorCharHeight;
+
+            this._redrawLabel(position, label, orientation, labelClass, this.props.minorCharHeight);
+          }
+        }
+      }
+    }, {
+      key: '_getGroupScaleValues',
+      value: function _getGroupScaleValues(group) {
+        var avgLabel = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+        var maxValue = void 0,
+            minValue = void 0;
+
+        if (avgLabel) {
+          maxValue = Math.max.apply(Math, group.itemsData.map(function (item) {
+            return item.referenceLine ? item.y : item.maxValue;
+          }));
+          minValue = Math.min.apply(Math, group.itemsData.map(function (item) {
+            return item.referenceLine ? item.y : item.minValue;
+          }));
+        } else {
+          var itemsData = group.itemsData.map(function (item) {
+            return item.y;
+          });
+          maxValue = Math.max.apply(Math, _toConsumableArray(itemsData));
+          minValue = Math.min.apply(Math, _toConsumableArray(itemsData));
+        }
+
+        if (group && group.group) {
+          if (Number.isInteger(group.group.maxValue)) {
+            maxValue = group.group.maxValue;
+          }
+          if (Number.isInteger(group.group.minValue)) {
+            minValue = group.group.minValue;
+          }
+        }
+
+        var groupAvgValue = group.itemsData[0] && group.itemsData[0].avgValue;
+        var avgValue = groupAvgValue !== undefined ? groupAvgValue : '';
+
+        var referenceLine = group.itemsData.map(function (item) {
+          return item.referenceLine && item.y;
+        })[0];
+
+        return {
+          maxValue: maxValue,
+          minValue: minValue,
+          avgValue: avgValue,
+          referenceLine: referenceLine
+        };
+      }
+    }]);
+
+    return DrawLabels;
+  }();
+
+  module.exports = DrawLabels;
+
+/***/ }),
+/* 60 */
+/***/ (function(module, exports) {
+
+  'use strict';
+
+  var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+  function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+  var DrawLines = function () {
+    function DrawLines(redrawLine, props) {
+      _classCallCheck(this, DrawLines);
+
+      this._redrawLine = redrawLine;
+      this.props = props;
+    }
+
+    _createClass(DrawLines, [{
+      key: 'renderLine',
+      value: function renderLine(y, group, previousY) {
+        var heightSummary = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+
+        var lineClass = 'vis-grid vis-horizontal vis-timeline-chart-horizontal-line';
+
+        if (group.summary && heightSummary > 0) y = heightSummary;
+        this._redrawLine(y, 'left', lineClass, this.props.width, this.props.majorLineWidth + this.props.width);
+
+        switch (group.group.type) {
+          case 'arrow-avg':
+            this._renderArrowAvgLine(y, previousY, lineClass, group);
+            break;
+          default:
+            this._renderDefaultLine(y, previousY, lineClass, group);
+            break;
+        }
+      }
+    }, {
+      key: '_renderArrowAvgLine',
+      value: function _renderArrowAvgLine(y, previousY, lineClass, group) {
+        if (group.itemsData && group.itemsData.length > 0) {
+          var lineClassAvgType = 'vis-timeline-chart-guideline vis-timeline-chart-avg-type';
+          var lineClassMaxValue = lineClass + ' ' + lineClassAvgType + ' vis-timeline-chart-max-value';
+          var lineClassAverage = lineClass + ' ' + lineClassAvgType + ' vis-timeline-chart-average';
+          var lineClassMinValue = lineClass + ' ' + lineClassAvgType + ' vis-timeline-chart-min-value';
+
+          var _getSupportLines2 = this._getSupportLines(y, previousY),
+              topLineY = _getSupportLines2.topLineY,
+              middleLineY = _getSupportLines2.middleLineY,
+              bottomLineY = _getSupportLines2.bottomLineY;
+
+          this._redrawLine(y - topLineY, 'left', lineClassMaxValue, 0, this.props.majorLineWidth);
+          this._redrawLine(y - middleLineY, 'left', lineClassAverage, 0, this.props.majorLineWidth);
+          this._redrawLine(y - bottomLineY, 'left', lineClassMinValue, 0, this.props.majorLineWidth);
+        }
+      }
+    }, {
+      key: '_renderDefaultLine',
+      value: function _renderDefaultLine(y, previousY, lineClass, group) {
+        lineClass += ' vis-timeline-chart-guideline vis-timeline-chart-default-type';
+        var values = group.itemsData.map(function (item) {
+          return item.y;
+        });
+        var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
+
+        if (values.length > 0) {
+          var _getSupportLines3 = this._getSupportLines(y, previousY),
+              topLineY = _getSupportLines3.topLineY,
+              middleLineY = _getSupportLines3.middleLineY,
+              bottomLineY = _getSupportLines3.bottomLineY;
+
+          var max = Math.max.apply(Math, _toConsumableArray(values));
+          var min = Math.min.apply(Math, _toConsumableArray(values));
+
+          if (max === min || avgValue) {
+            this._redrawLine(y - middleLineY, 'left', lineClass, 0, this.props.majorLineWidth);
+          } else {
+            this._redrawLine(y - topLineY, 'left', lineClass, 0, this.props.majorLineWidth);
+            this._redrawLine(y - bottomLineY, 'left', lineClass, 0, this.props.majorLineWidth);
+          }
+        }
+      }
+    }, {
+      key: '_getSupportLines',
+      value: function _getSupportLines(y, previousY) {
+        var size = y - previousY;
+
+        return {
+          topLineY: size,
+          middleLineY: size / 2 + this.props.minorCharHeight / 2,
+          bottomLineY: this.props.minorCharHeight
+        };
+      }
+    }]);
+
+    return DrawLines;
+  }();
+
+  module.exports = DrawLines;
+
+/***/ }),
+/* 61 */
+/***/ (function(module, exports, __webpack_require__) {
+
+  'use strict';
+
+  var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+  var DOMutil = __webpack_require__(7);
+
+  var DrawBackground = function () {
+    function DrawBackground(props, dom, DOMelements) {
+      _classCallCheck(this, DrawBackground);
+
+      this.props = props;
+      this.dom = dom;
+      this.DOMelements = DOMelements;
+    }
+
+    _createClass(DrawBackground, [{
+      key: 'renderBackground',
+      value: function renderBackground(y, height, groupId) {
+        this._drawBackgroundDiv(y + this.props.majorLineHeight, this.props.majorLineWidth + this.props.width, height, groupId);
+      }
+    }, {
+      key: '_drawBackgroundDiv',
+      value: function _drawBackgroundDiv(y, width, height, groupId) {
+        var background = DOMutil.getDOMElement('div', this.DOMelements.backgrounds, this.dom.lineContainer);
+        background.className = 'vis-timeline-chart-background tl-group__' + groupId;
+        background.setAttribute('row-id', groupId);
+
+        background.style.width = width + 'px';
+        background.style.height = height + 'px';
+        background.style.top = y + 'px';
+      }
+    }]);
+
+    return DrawBackground;
+  }();
+
+  module.exports = DrawBackground;
+
+/***/ }),
+/* 62 */
 /***/ (function(module, exports) {
 
   'use strict';
@@ -30611,7 +31200,7 @@ return /******/ (function(modules) { // webpackBootstrap
   exports.configureOptions = configureOptions;
 
 /***/ }),
-/* 59 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
   'use strict';
@@ -30632,7 +31221,7 @@ return /******/ (function(modules) { // webpackBootstrap
   var Core = __webpack_require__(31);
   var TimeAxis = __webpack_require__(42);
   var CurrentTime = __webpack_require__(47);
-  var TimelineChartLineGraph = __webpack_require__(60);
+  var TimelineChartLineGraph = __webpack_require__(64);
 
   var _require = __webpack_require__(27),
       Validator = _require.default;
@@ -30912,7 +31501,7 @@ return /******/ (function(modules) { // webpackBootstrap
   module.exports = TimelineChart;
 
 /***/ }),
-/* 60 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
   'use strict';
@@ -30933,12 +31522,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
   var util = __webpack_require__(1);
   var DOMutil = __webpack_require__(7);
-  var Bars = __webpack_require__(54);
+  var Bars = __webpack_require__(51);
   var Lines = __webpack_require__(56);
-  var Points = __webpack_require__(55);
+  var Points = __webpack_require__(52);
   var Legend = __webpack_require__(57);
   var LineGraph = __webpack_require__(50);
-  var TimelineChartDataAxis = __webpack_require__(61);
+  var TimelineChartDataAxis = __webpack_require__(58);
 
   var UNGROUPED = '__ungrouped__'; // reserved group id for ungrouped items
 
@@ -31246,13 +31835,19 @@ return /******/ (function(modules) { // webpackBootstrap
                           })();
                         }
 
-                        DOMutil.attachEvents(points, 'mouseenter', groupsData[groupIds[i]], function (event, element, data) {
+                        DOMutil.attachEvents(points, 'mouseenter', groupsData[groupIds[i]].filter(function (point) {
+                          return !point.referenceLine;
+                        }), function (event, element, data) {
                           return callbackFunction('itemmouseenter', event, element, data);
                         });
-                        DOMutil.attachEvents(points, 'mouseout', groupsData[groupIds[i]], function (event, element, data) {
+                        DOMutil.attachEvents(points, 'mouseout', groupsData[groupIds[i]].filter(function (point) {
+                          return !point.referenceLine;
+                        }), function (event, element, data) {
                           return callbackFunction('itemmouseout', event, element, data);
                         });
-                        DOMutil.attachEvents(points, 'click', groupsData[groupIds[i]], function (event, element, data) {
+                        DOMutil.attachEvents(points, 'click', groupsData[groupIds[i]].filter(function (point) {
+                          return !point.referenceLine;
+                        }), function (event, element, data) {
                           return callbackFunction('itemclick', event, element, data);
                         });
                       }
@@ -31327,7 +31922,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         this.yAxisLeft = []; // Clear Axis Left Array
         this.groupsData.forEach(function (group) {
-          _this4._insertYAxisLeft(group);
+          _this4._insertYAxisLeft(group.id, group.summary, true);
           _this4._updateGroup(group, group.id);
           _this4.groups[group.id].setItems(Object.keys(groupsContent).filter(function (key) {
             return key.split("_")[1] == group.value;
@@ -31474,597 +32069,12 @@ return /******/ (function(modules) { // webpackBootstrap
         this.options.graphHeight = totalHeight + 1;
         this.options.legend = { enabled: false };
       }
-
-      /**
-       * Update Axis Left according Group Data.
-       * In case of group not summary, must be just one axis.
-       *
-       * @param {Group} group
-       * @private
-       */
-
-    }, {
-      key: '_insertYAxisLeft',
-      value: function _insertYAxisLeft(group) {
-        if (group.summary || Object.keys(this.yAxisLeft).length === 0) {
-          this.yAxisLeft[group.id] = new TimelineChartDataAxis(this.body, this.options.dataAxis, this.svg, this.options.groups);
-        }
-      }
     }]);
 
     return TimelineChartLineGraph;
   }(LineGraph);
 
   module.exports = TimelineChartLineGraph;
-
-/***/ }),
-/* 61 */
-/***/ (function(module, exports, __webpack_require__) {
-
-  'use strict';
-
-  var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-  function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-  function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-  var DOMutil = __webpack_require__(7);
-  var util = __webpack_require__(1);
-  var DataAxis = __webpack_require__(51);
-  var DataScale = __webpack_require__(52);
-  var DrawLabels = __webpack_require__(62);
-  var DrawLines = __webpack_require__(63);
-  var DrawBackground = __webpack_require__(64);
-
-  var TimelineChartDataAxis = function (_DataAxis) {
-    _inherits(TimelineChartDataAxis, _DataAxis);
-
-    function TimelineChartDataAxis(body, options, svg, linegraphOptions) {
-      _classCallCheck(this, TimelineChartDataAxis);
-
-      var _this = _possibleConstructorReturn(this, (TimelineChartDataAxis.__proto__ || Object.getPrototypeOf(TimelineChartDataAxis)).call(this, body, options, svg, linegraphOptions));
-
-      var dataRegionTimeline = document.querySelector('.data-region.data-container-with-timeline');
-
-      _this.defaultOptions = {
-        orientation: 'left', // supported: 'left', 'right'
-        showMinorLabels: true,
-        showMinorLines: true,
-        showMajorLabels: true,
-        icons: false,
-        majorLinesOffset: 7,
-        minorLinesOffset: 4,
-        labelOffsetX: 10,
-        labelOffsetY: 2,
-        iconWidth: 20,
-        width: dataRegionTimeline ? parseInt(dataRegionTimeline.offsetWidth / 26) + 'px' : '0px',
-        visible: true,
-        alignZeros: true,
-        data: undefined,
-        left: {
-          range: { min: undefined, max: undefined },
-          format: function format(value) {
-            return '' + parseFloat(value.toPrecision(3));
-          },
-          title: { text: undefined, style: undefined }
-        },
-        right: {
-          range: { min: undefined, max: undefined },
-          format: function format(value) {
-            return '' + parseFloat(value.toPrecision(3));
-          },
-          title: { text: undefined, style: undefined }
-        }
-      };
-
-      _this.DOMelements.backgrounds = {};
-
-      _this.dataAxisClassName = 'vis-data-axis vis-timeline-chart-data-axis';
-      _this.drawLabels = new DrawLabels(_this._redrawLabel.bind(_this), _this.props, _this.options);
-      _this.drawLines = new DrawLines(_this._redrawLine.bind(_this), _this.props);
-      _this.drawBackground = new DrawBackground(_this.props, _this.dom, _this.DOMelements);
-      return _this;
-    }
-
-    _createClass(TimelineChartDataAxis, [{
-      key: 'setOptions',
-      value: function setOptions(options) {
-        if (options) {
-          var redraw = false;
-          if (this.options.orientation !== options.orientation && options.orientation !== undefined) {
-            redraw = true;
-          }
-          var fields = ['chart', 'orientation', 'showMinorLabels', 'showMinorLines', 'showMajorLabels', 'linesOffsetY', 'linesOffsetX', 'extraLineWidth', 'majorLinesOffset', 'minorLinesOffset', 'labelOffsetX', 'labelOffsetY', 'width', 'visible', 'data', 'left', 'right', 'fontSize'];
-          util.selectiveDeepExtend(fields, this.options, options);
-
-          this.minWidth = Number(('' + this.options.width).replace("px", ""));
-          if (redraw === true && this.dom.frame) {
-            this.hide();
-            this.show();
-          }
-        }
-      }
-    }, {
-      key: '_redrawLabels',
-      value: function _redrawLabels() {
-        var resized = false;
-        this.maxLabelSize = 0;
-
-        var orientation = this.options['orientation'];
-        DOMutil.prepareElements(this.DOMelements.lines);
-        DOMutil.prepareElements(this.DOMelements.labels);
-        DOMutil.prepareElements(this.DOMelements.backgrounds);
-
-        var customRange = this.options[orientation].range !== undefined ? this.options[orientation].range : {};
-
-        //Override range with manual options:
-        var autoScaleEnd = true;
-        if (customRange.max !== undefined && !Number.isNaN(customRange.max)) {
-          this.range.end = customRange.max;
-          autoScaleEnd = false;
-        }
-        var autoScaleStart = true;
-        if (customRange.min !== undefined && !Number.isNaN(customRange.min)) {
-          this.range.start = customRange.min;
-          autoScaleStart = false;
-        }
-
-        this.scale = new DataScale(this.range.start, this.range.end, autoScaleStart, autoScaleEnd, this.dom.frame.offsetHeight, this.props.majorCharHeight, this.options.alignZeros, this.options[orientation].format);
-
-        if (this.master === false && this.masterAxis !== undefined) {
-          this.scale.followScale(this.masterAxis.scale);
-        }
-
-        var offsetY = 1;
-        var y = offsetY;
-        var summaryGroupBackGround = false;
-        for (var keyBg in this.groups) {
-          var group = this.groups[keyBg];
-          if (group.summary && !summaryGroupBackGround || !group.summary) {
-            var previousY = y;
-            y += group.group.rowHeightId['tl-groups_' + group.id];
-
-            this.drawBackground.renderBackground(previousY - offsetY, y - previousY, group.group.value);
-            summaryGroupBackGround = true;
-          }
-        }
-
-        y = offsetY;
-        var summaryLine = false;
-        for (var key in this.groups) {
-          var _group = this.groups[key];
-          if (_group.summary && !summaryLine || !_group.summary) {
-            var _previousY = y;
-            var rowHeight = _group.group.rowHeightId['tl-groups_' + _group.id];
-            y += rowHeight;
-
-            var ySummary = this.height;
-            var yLabel = y;
-            if (_group.summary) {
-              yLabel = this.height;
-            } else {
-              ySummary = 0;
-              for (var s in this.groups) {
-                var grupoSummary = this.groups[s];
-                var rowHeightSummary = grupoSummary.group.rowHeightId['tl-groups_' + grupoSummary.id];
-                ySummary += rowHeightSummary ? rowHeightSummary : 0;
-              }
-            }
-
-            this.drawLabels.renderLabel(yLabel, orientation, _group, _previousY);
-            this.drawLines.renderLine(y, _group, _previousY, ySummary);
-            summaryLine = true;
-          }
-        }
-
-        resized = this.verifyResize(orientation);
-
-        return resized;
-      }
-
-      /**
-      * Create a label for the axis at position x
-      * @override Removed offset in left pixels
-      * @private
-      * @param y
-      * @param text
-      * @param orientation
-      * @param className
-      * @param characterHeight
-      */
-
-    }, {
-      key: '_redrawLabel',
-      value: function _redrawLabel(y, text, orientation, className, characterHeight) {
-        // reuse redundant label
-        var label = DOMutil.getDOMElement('div', this.DOMelements.labels, this.dom.frame); //this.dom.redundant.labels.shift();
-        label.className = className;
-        label.innerHTML = text;
-        if (orientation === 'left') {
-          label.style.textAlign = "right";
-        } else {
-          label.style.textAlign = "left";
-        }
-
-        label.style.top = y + 'px';
-
-        text += '';
-
-        var largestWidth = Math.max(this.props.majorCharWidth, this.props.minorCharWidth);
-        if (this.maxLabelSize < text.length * largestWidth) {
-          this.maxLabelSize = text.length * largestWidth;
-        }
-      }
-    }, {
-      key: 'convertValue',
-      value: function convertValue(y, range, baseY) {
-        var factor = range.max - range.min;
-        var yToPercent = (y - range.min) * 100 / factor;
-        yToPercent = Number.isNaN(yToPercent) ? 0 : yToPercent;
-        return baseY * yToPercent / 100;
-      }
-    }]);
-
-    return TimelineChartDataAxis;
-  }(DataAxis);
-
-  module.exports = TimelineChartDataAxis;
-
-/***/ }),
-/* 62 */
-/***/ (function(module, exports) {
-
-  'use strict';
-
-  var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-  function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-  var DrawLabels = function () {
-    function DrawLabels(redrawLabel, props, options) {
-      _classCallCheck(this, DrawLabels);
-
-      this._redrawLabel = redrawLabel;
-      this.props = props;
-      this.options = options;
-    }
-
-    _createClass(DrawLabels, [{
-      key: 'renderLabel',
-      value: function renderLabel(y, orientation, group, previousY) {
-        var labelClass = 'vis-y-axis vis-timeline-chart-y-axis';
-
-        switch (group.group.type) {
-          case 'arrow-avg':
-            this._renderArrowAvgLabel(y, previousY, orientation, labelClass, group);
-            break;
-          default:
-            this._renderLineLabel(y, previousY, orientation, labelClass, group);
-            break;
-        }
-      }
-    }, {
-      key: '_renderArrowAvgLabel',
-      value: function _renderArrowAvgLabel(lineHeight, previousY, orientation, labelClass, group) {
-        if (!group.itemsData || group.itemsData.length === 0) {
-          return; // exit
-        }
-
-        var _getGroupScaleValues2 = this._getGroupScaleValues(group, true),
-            maxValue = _getGroupScaleValues2.maxValue,
-            minValue = _getGroupScaleValues2.minValue,
-            avgValue = _getGroupScaleValues2.avgValue;
-
-        if (group.summary && group.group && group.group.intervalScale) {
-          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue });
-          return; // exit
-        }
-
-        var _getSupportLabels2 = this._getSupportLabels(lineHeight, previousY),
-            topLabelY = _getSupportLabels2.topLabelY,
-            middleLabelY = _getSupportLabels2.middleLabelY,
-            bottomLabelY = _getSupportLabels2.bottomLabelY;
-
-        this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
-        this._redrawLabel(lineHeight - middleLabelY, avgValue, orientation, labelClass, this.props.minorCharHeight);
-        this._redrawLabel(lineHeight - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
-      }
-    }, {
-      key: '_renderLineLabel',
-      value: function _renderLineLabel(lineHeight, previousY, orientation, labelClass, group) {
-        var values = group.itemsData.map(function (item) {
-          return item.y;
-        });
-        if (values.length === 0) {
-          return; // exit
-        }
-
-        var _getGroupScaleValues3 = this._getGroupScaleValues(group),
-            maxValue = _getGroupScaleValues3.maxValue,
-            minValue = _getGroupScaleValues3.minValue,
-            avgValue = _getGroupScaleValues3.avgValue,
-            referenceLine = _getGroupScaleValues3.referenceLine;
-
-        if (group.summary && group.group && group.group.intervalScale) {
-          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue, referenceLine: referenceLine });
-          return; // exit
-        }
-
-        var _getSupportLabels3 = this._getSupportLabels(lineHeight, previousY, this.options.fontSize),
-            topLabelY = _getSupportLabels3.topLabelY,
-            middleLabelY = _getSupportLabels3.middleLabelY,
-            bottomLabelY = _getSupportLabels3.bottomLabelY;
-
-        if (maxValue === minValue || avgValue) {
-          var label = avgValue !== '' ? avgValue : maxValue;
-          this._redrawLabel(lineHeight - middleLabelY, label, orientation, labelClass, this.props.minorCharHeight);
-        } else {
-          this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
-          this._redrawLabel(lineHeight - bottomLabelY, minValue, orientation, labelClass, this.props.minorCharHeight);
-        }
-      }
-    }, {
-      key: '_getSupportLabels',
-      value: function _getSupportLabels(y, previousY) {
-        var size = y - previousY;
-
-        return {
-          topLabelY: size,
-          middleLabelY: size / 2 + this.props.minorCharHeight / 2,
-          bottomLabelY: this.props.minorCharHeight
-        };
-      }
-    }, {
-      key: '_renderLineLabelWithScale',
-      value: function _renderLineLabelWithScale(_ref) {
-        var lineHeight = _ref.lineHeight,
-            orientation = _ref.orientation,
-            labelClass = _ref.labelClass,
-            group = _ref.group,
-            maxValue = _ref.maxValue,
-            minValue = _ref.minValue,
-            avgValue = _ref.avgValue,
-            referenceLine = _ref.referenceLine;
-
-        var internHeight = lineHeight - this.props.minorCharHeight * 2;
-        var offset = 0;
-        var amountLabelsToFit = Math.floor(internHeight / this.props.minorCharHeight);
-        var intervalScale = group.group.intervalScale;
-        var amountLabels = Math.floor((maxValue - minValue) / intervalScale) - 1; // Remove one that is max label
-        var position = lineHeight - this.props.minorCharHeight;
-        var label = minValue;
-
-        // Divides the number of labels to fit the available height
-        while (amountLabels > amountLabelsToFit) {
-          amountLabels = Math.floor((amountLabels - 1) / 2);
-          intervalScale += intervalScale;
-        }
-
-        if (minValue !== undefined && maxValue !== undefined) {
-          if (minValue !== maxValue) {
-            this._redrawLabel(offset, maxValue, orientation, labelClass, this.props.minorCharHeight);
-            this._redrawLabel(position, minValue, orientation, labelClass, this.props.minorCharHeight);
-          } else if (referenceLine !== undefined) {
-            var referenceLineY = lineHeight * 0.5;
-            this._redrawLabel(referenceLineY, referenceLine || avgValue, orientation, labelClass, this.props.minorCharHeight);
-          }
-        }
-
-        if (amountLabels && amountLabelsToFit > 0) {
-          var scaleDistance = Math.abs(maxValue - minValue);
-          var intervalHeight = intervalScale / scaleDistance * (internHeight - amountLabels * this.props.minorCharHeight);
-
-          for (var i = 0; i < amountLabels && amountLabelsToFit > 0; i++) {
-            label = label + intervalScale;
-            position = position - intervalHeight - this.props.minorCharHeight;
-
-            this._redrawLabel(position, label, orientation, labelClass, this.props.minorCharHeight);
-          }
-        }
-      }
-    }, {
-      key: '_getGroupScaleValues',
-      value: function _getGroupScaleValues(group) {
-        var avgLabel = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-        var maxValue = void 0,
-            minValue = void 0;
-
-        if (avgLabel) {
-          maxValue = Math.max.apply(Math, group.itemsData.map(function (item) {
-            return item.referenceLine ? item.y : item.maxValue;
-          }));
-          minValue = Math.min.apply(Math, group.itemsData.map(function (item) {
-            return item.referenceLine ? item.y : item.minValue;
-          }));
-        } else {
-          var itemsData = group.itemsData.map(function (item) {
-            return item.y;
-          });
-          maxValue = Math.max.apply(Math, _toConsumableArray(itemsData));
-          minValue = Math.min.apply(Math, _toConsumableArray(itemsData));
-        }
-
-        if (group && group.group) {
-          if (Number.isInteger(group.group.maxValue)) {
-            maxValue = group.group.maxValue;
-          }
-          if (Number.isInteger(group.group.minValue)) {
-            minValue = group.group.minValue;
-          }
-        }
-
-        var groupAvgValue = group.itemsData[0] && group.itemsData[0].avgValue;
-        var avgValue = groupAvgValue !== undefined ? groupAvgValue : '';
-
-        var referenceLine = group.itemsData.map(function (item) {
-          return item.referenceLine && item.y;
-        })[0];
-
-        return {
-          maxValue: maxValue,
-          minValue: minValue,
-          avgValue: avgValue,
-          referenceLine: referenceLine
-        };
-      }
-    }]);
-
-    return DrawLabels;
-  }();
-
-  module.exports = DrawLabels;
-
-/***/ }),
-/* 63 */
-/***/ (function(module, exports) {
-
-  'use strict';
-
-  var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-  function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-  var DrawLines = function () {
-    function DrawLines(redrawLine, props) {
-      _classCallCheck(this, DrawLines);
-
-      this._redrawLine = redrawLine;
-      this.props = props;
-    }
-
-    _createClass(DrawLines, [{
-      key: 'renderLine',
-      value: function renderLine(y, group, previousY) {
-        var heightSummary = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
-
-        var lineClass = 'vis-grid vis-horizontal vis-timeline-chart-horizontal-line';
-
-        if (group.summary && heightSummary > 0) y = heightSummary;
-        this._redrawLine(y, 'left', lineClass, this.props.width, this.props.majorLineWidth + this.props.width);
-
-        switch (group.group.type) {
-          case 'arrow-avg':
-            this._renderArrowAvgLine(y, previousY, lineClass, group);
-            break;
-          default:
-            this._renderDefaultLine(y, previousY, lineClass, group);
-            break;
-        }
-      }
-    }, {
-      key: '_renderArrowAvgLine',
-      value: function _renderArrowAvgLine(y, previousY, lineClass, group) {
-        if (group.itemsData && group.itemsData.length > 0) {
-          var lineClassAvgType = 'vis-timeline-chart-guideline vis-timeline-chart-avg-type';
-          var lineClassMaxValue = lineClass + ' ' + lineClassAvgType + ' vis-timeline-chart-max-value';
-          var lineClassAverage = lineClass + ' ' + lineClassAvgType + ' vis-timeline-chart-average';
-          var lineClassMinValue = lineClass + ' ' + lineClassAvgType + ' vis-timeline-chart-min-value';
-
-          var _getSupportLines2 = this._getSupportLines(y, previousY),
-              topLineY = _getSupportLines2.topLineY,
-              middleLineY = _getSupportLines2.middleLineY,
-              bottomLineY = _getSupportLines2.bottomLineY;
-
-          this._redrawLine(y - topLineY, 'left', lineClassMaxValue, 0, this.props.majorLineWidth);
-          this._redrawLine(y - middleLineY, 'left', lineClassAverage, 0, this.props.majorLineWidth);
-          this._redrawLine(y - bottomLineY, 'left', lineClassMinValue, 0, this.props.majorLineWidth);
-        }
-      }
-    }, {
-      key: '_renderDefaultLine',
-      value: function _renderDefaultLine(y, previousY, lineClass, group) {
-        lineClass += ' vis-timeline-chart-guideline vis-timeline-chart-default-type';
-        var values = group.itemsData.map(function (item) {
-          return item.y;
-        });
-        var avgValue = group.itemsData[0] && group.itemsData[0].avgValue ? group.itemsData[0].avgValue : undefined;
-
-        if (values.length > 0) {
-          var _getSupportLines3 = this._getSupportLines(y, previousY),
-              topLineY = _getSupportLines3.topLineY,
-              middleLineY = _getSupportLines3.middleLineY,
-              bottomLineY = _getSupportLines3.bottomLineY;
-
-          var max = Math.max.apply(Math, _toConsumableArray(values));
-          var min = Math.min.apply(Math, _toConsumableArray(values));
-
-          if (max === min || avgValue) {
-            this._redrawLine(y - middleLineY, 'left', lineClass, 0, this.props.majorLineWidth);
-          } else {
-            this._redrawLine(y - topLineY, 'left', lineClass, 0, this.props.majorLineWidth);
-            this._redrawLine(y - bottomLineY, 'left', lineClass, 0, this.props.majorLineWidth);
-          }
-        }
-      }
-    }, {
-      key: '_getSupportLines',
-      value: function _getSupportLines(y, previousY) {
-        var size = y - previousY;
-
-        return {
-          topLineY: size,
-          middleLineY: size / 2 + this.props.minorCharHeight / 2,
-          bottomLineY: this.props.minorCharHeight
-        };
-      }
-    }]);
-
-    return DrawLines;
-  }();
-
-  module.exports = DrawLines;
-
-/***/ }),
-/* 64 */
-/***/ (function(module, exports, __webpack_require__) {
-
-  'use strict';
-
-  var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-  var DOMutil = __webpack_require__(7);
-
-  var DrawBackground = function () {
-    function DrawBackground(props, dom, DOMelements) {
-      _classCallCheck(this, DrawBackground);
-
-      this.props = props;
-      this.dom = dom;
-      this.DOMelements = DOMelements;
-    }
-
-    _createClass(DrawBackground, [{
-      key: 'renderBackground',
-      value: function renderBackground(y, height, groupId) {
-        this._drawBackgroundDiv(y + this.props.majorLineHeight, this.props.majorLineWidth + this.props.width, height, groupId);
-      }
-    }, {
-      key: '_drawBackgroundDiv',
-      value: function _drawBackgroundDiv(y, width, height, groupId) {
-        var background = DOMutil.getDOMElement('div', this.DOMelements.backgrounds, this.dom.lineContainer);
-        background.className = 'vis-timeline-chart-background tl-group__' + groupId;
-        background.setAttribute('row-id', groupId);
-
-        background.style.width = width + 'px';
-        background.style.height = height + 'px';
-        background.style.top = y + 'px';
-      }
-    }]);
-
-    return DrawBackground;
-  }();
-
-  module.exports = DrawBackground;
 
 /***/ }),
 /* 65 */
