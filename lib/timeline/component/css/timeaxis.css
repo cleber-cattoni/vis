@@ -48,3 +48,7 @@
 .vis-time-axis .vis-grid.vis-major {
   border-color: #bfbfbf;
 }
+
+.vis-time-axis .vis-grid.vis-vertical.vis-minor:last-child {
+  border-right: 1px dashed #e5e5e5;
+}
