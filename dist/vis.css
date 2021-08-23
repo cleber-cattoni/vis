@@ -690,6 +690,10 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
   border-color: #bfbfbf;
 }
 
+.vis-time-axis .vis-grid.vis-vertical.vis-minor:last-child {
+  border-right: 1px dashed #e5e5e5;
+}
+
 .vis-current-time {
   background-color: #FF7F6E;
   width: 2px;
