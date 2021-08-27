@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-08-23
+ * @date    2021-08-27
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -7766,31 +7766,70 @@ return /******/ (function(modules) { // webpackBootstrap
         var arrowAvgMinHeight = getArrowAvgMinHeight(baseArrowSize);
         var arrowAvgHeight = (arrowAvgRequestedHeight < arrowAvgMinHeight ? arrowAvgMinHeight : arrowAvgRequestedHeight) / 2; // will be calculated from center
 
-        y = adjustArrowAvgPositionToFitContainer(y, baseY, baseHeight, arrowAvgMinHeight + strokeWidth * 2);
-
         // AVG ARROW DOWN (top side)
-        var downLeftPt = x - directionArrow.height + ',' + (y - arrowAvgHeight + strokeWidth);
-        var downRightPt = x + directionArrow.height + ',' + (y - arrowAvgHeight + strokeWidth);
-        var downBottomPt = x + ',' + (y - arrowAvgHeight + directionArrow.height + strokeWidth);
-        var downLineToCenterPt = x + ',' + (y - crossHalfSize - _Constants.CROSS.margin);
+        var downLeftPt = void 0;
+        var downRightPt = void 0;
+        var downBottomPt = void 0;
+        var downLineToCenterPt = void 0;
+
+        // CROSS (middle)
+        var crossVerticalLine = void 0;
+        var crossHorizontalLine = void 0;
+
+        // AVG ARROW UP (bottom side)
+        var upLeftPt = void 0;
+        var upRightPt = void 0;
+        var upTopPt = void 0;
+        var upLineToCenterPt = void 0;
+
+        if (props.calculateAllPoints) {
+          // if this property is definied, then avgValue was passed
+          var y_min = baseY - props.screen_yMin;
+          var y_max = baseY - props.screen_yMax;
+          var y_avg = baseY - props.screen_yAvg;
+
+          // AVG ARROW DOWN (top side)
+          downLeftPt = x - directionArrow.height + ',' + y_max;
+          downRightPt = x + directionArrow.height + ',' + y_max;
+          downBottomPt = x + ',' + (y_max + directionArrow.height);
+          downLineToCenterPt = x + ',' + (y_avg - crossHalfSize - _Constants.CROSS.margin);
+
+          // CROSS (middle)
+          crossVerticalLine = 'M ' + x + ',' + (y_avg - crossHalfSize) + ' L ' + x + ',' + (y_avg + crossHalfSize);
+          crossHorizontalLine = 'M ' + (x - crossHalfSize) + ',' + y_avg + ' L ' + (x + crossHalfSize) + ',' + y_avg;
+
+          // AVG ARROW UP (bottom side)
+          upLeftPt = x - directionArrow.height + ',' + y_min;
+          upRightPt = x + directionArrow.height + ',' + y_min;
+          upTopPt = x + ',' + (y_min - directionArrow.height);
+          upLineToCenterPt = x + ',' + (y_avg + crossHalfSize + _Constants.CROSS.margin);
+        } else {
+          y = adjustArrowAvgPositionToFitContainer(y, baseY, baseHeight, arrowAvgMinHeight + strokeWidth * 2);
+
+          // AVG ARROW DOWN (top side)
+          downLeftPt = x - directionArrow.height + ',' + (y - arrowAvgHeight + strokeWidth);
+          downRightPt = x + directionArrow.height + ',' + (y - arrowAvgHeight + strokeWidth);
+          downBottomPt = x + ',' + (y - arrowAvgHeight + directionArrow.height + strokeWidth);
+          downLineToCenterPt = x + ',' + (y - crossHalfSize - _Constants.CROSS.margin);
+
+          // CROSS (middle)
+          crossVerticalLine = 'M ' + x + ',' + (y - crossHalfSize) + ' L ' + x + ',' + (y + crossHalfSize);
+          crossHorizontalLine = 'M ' + (x - crossHalfSize) + ',' + y + ' L ' + (x + crossHalfSize) + ',' + y;
+
+          // AVG ARROW UP (bottom side)
+          upLeftPt = x - directionArrow.height + ',' + (y + arrowAvgHeight - strokeWidth);
+          upRightPt = x + directionArrow.height + ',' + (y + arrowAvgHeight - strokeWidth);
+          upTopPt = x + ',' + (y + arrowAvgHeight - directionArrow.height - strokeWidth);
+          upLineToCenterPt = x + ',' + (y + crossHalfSize + _Constants.CROSS.margin);
+        }
 
         var _polygonDown = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
         _polygonDown.setAttributeNS(null, 'points', downLeftPt + ' ' + downRightPt + ' ' + downBottomPt + ' ' + downLineToCenterPt + ' ' + downBottomPt + ' ' + downLeftPt);
         _polygonDown.setAttributeNS(null, 'polygon-type', 'down');
 
-        // CROSS (middle)
-        var crossVerticalLine = 'M ' + x + ',' + (y - crossHalfSize) + ' L ' + x + ',' + (y + crossHalfSize);
-        var crossHorizontalLine = 'M ' + (x - crossHalfSize) + ',' + y + ' L ' + (x + crossHalfSize) + ',' + y;
-
         var polygonCross = exports.getSVGElement('path', JSONcontainer, svgContainer);
         polygonCross.setAttributeNS(null, 'd', crossVerticalLine + ' ' + crossHorizontalLine);
         polygonCross.setAttributeNS(null, 'polygon-type', 'cross');
-
-        // AVG ARROW UP (bottom side)
-        var upLeftPt = x - directionArrow.height + ',' + (y + arrowAvgHeight - strokeWidth);
-        var upRightPt = x + directionArrow.height + ',' + (y + arrowAvgHeight - strokeWidth);
-        var upTopPt = x + ',' + (y + arrowAvgHeight - directionArrow.height - strokeWidth);
-        var upLineToCenterPt = x + ',' + (y + crossHalfSize + _Constants.CROSS.margin);
 
         var _polygonUp = exports.getSVGElement('polygon', JSONcontainer, svgContainer);
         _polygonUp.setAttributeNS(null, 'points', upLeftPt + ' ' + upRightPt + ' ' + upTopPt + ' ' + upLineToCenterPt + ' ' + upTopPt + ' ' + upLeftPt);
@@ -7931,20 +7970,6 @@ return /******/ (function(modules) { // webpackBootstrap
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  var TIMELINE_CHART_PADDINGS = exports.TIMELINE_CHART_PADDINGS = Object.freeze({
-    top: 0.15,
-    bottom: 0.15,
-    calculatePadding: function calculatePadding(baseHeight) {
-      return {
-        top: baseHeight * this.top,
-        bottom: baseHeight * this.bottom
-      };
-    },
-    calculateAvailableHeight: function calculateAvailableHeight(baseHeight) {
-      return baseHeight * (1 - this.top - this.bottom);
-    }
-  });
-
   var CROSS = exports.CROSS = Object.freeze({
     size: 6,
     margin: 1
@@ -28728,7 +28753,11 @@ return /******/ (function(modules) { // webpackBootstrap
         alertMin: d.alertMin,
         alertMax: d.alertMax,
         alertMed: d.alertMed,
-        alertColor: d.alertColor
+        alertColor: d.alertColor,
+        screen_yMin: d.screen_yMin,
+        screen_yAvg: d.screen_yAvg,
+        screen_yMax: d.screen_yMax,
+        calculateAllPoints: d.calculateAllPoints
       };
       if (d.referenceLine) continue;
       if (!callback) {
@@ -30479,9 +30508,8 @@ return /******/ (function(modules) { // webpackBootstrap
             y += rowHeight;
 
             var ySummary = this.height;
-            var yLabel = y;
             if (_group.summary) {
-              yLabel = this.height;
+              y = this.height;
             } else {
               ySummary = 0;
               for (var s in this.groups) {
@@ -30491,7 +30519,7 @@ return /******/ (function(modules) { // webpackBootstrap
               }
             }
 
-            this.drawLabels.renderLabel(yLabel, orientation, _group, _previousY);
+            this.drawLabels.renderLabel(y, orientation, _group, _previousY);
             this.drawLines.renderLine(y, _group, _previousY, ySummary);
             summaryLine = true;
           }
@@ -30598,7 +30626,7 @@ return /******/ (function(modules) { // webpackBootstrap
             avgValue = _getGroupScaleValues2.avgValue;
 
         if (group.summary && group.group && group.group.intervalScale) {
-          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue });
+          this._renderLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue });
           return; // exit
         }
 
@@ -30628,7 +30656,7 @@ return /******/ (function(modules) { // webpackBootstrap
             referenceLine = _getGroupScaleValues3.referenceLine;
 
         if (group.summary && group.group && group.group.intervalScale) {
-          this._renderLineLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue, referenceLine: referenceLine });
+          this._renderLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue, referenceLine: referenceLine });
           return; // exit
         }
 
@@ -30638,7 +30666,7 @@ return /******/ (function(modules) { // webpackBootstrap
             bottomLabelY = _getSupportLabels3.bottomLabelY;
 
         if (maxValue === minValue || avgValue) {
-          var label = avgValue !== '' ? avgValue : maxValue;
+          var label = _.isNumber(avgValue) || _.isString(avgValue) && !_.isEmpty(avgValue) ? avgValue : maxValue;
           this._redrawLabel(lineHeight - middleLabelY, label, orientation, labelClass, this.props.minorCharHeight);
         } else {
           this._redrawLabel(lineHeight - topLabelY, maxValue, orientation, labelClass, this.props.minorCharHeight);
@@ -30657,8 +30685,8 @@ return /******/ (function(modules) { // webpackBootstrap
         };
       }
     }, {
-      key: '_renderLineLabelWithScale',
-      value: function _renderLineLabelWithScale(_ref) {
+      key: '_renderLabelWithScale',
+      value: function _renderLabelWithScale(_ref) {
         var lineHeight = _ref.lineHeight,
             orientation = _ref.orientation,
             labelClass = _ref.labelClass,
@@ -30737,7 +30765,7 @@ return /******/ (function(modules) { // webpackBootstrap
         }
 
         var groupAvgValue = group.itemsData[0] && group.itemsData[0].avgValue;
-        var avgValue = groupAvgValue !== undefined ? groupAvgValue : '';
+        var avgValue = _.isNumber(groupAvgValue) || _.isString(groupAvgValue) ? groupAvgValue : '';
 
         var referenceLine = group.itemsData.map(function (item) {
           return item.referenceLine && item.y;
@@ -31510,8 +31538,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
   var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  var _Constants = __webpack_require__(8);
-
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -32001,7 +32027,6 @@ return /******/ (function(modules) { // webpackBootstrap
           return d.referenceLine ? d.y : d.minValue;
         });
         var baseGraphHeight = actualY - previousY;
-        var padding = _Constants.TIMELINE_CHART_PADDINGS.calculatePadding(baseGraphHeight);
         var range = {
           max: group.summary && group.group.maxValue ? group.group.maxValue : Math.max.apply(Math, _toConsumableArray(listOfMaxValues)),
           min: group.summary && group.group.minValue ? group.group.minValue : Math.min.apply(Math, _toConsumableArray(listOfMinValues))
@@ -32010,8 +32035,8 @@ return /******/ (function(modules) { // webpackBootstrap
         for (var i = 0; i < datapoints.length; i++) {
           if (datapoints[i].referenceLine) {
             var convertedValue = 0;
-            var maxValue = datapoints[i].referenceLine ? datapoints[i].y : datapoints[i].maxValue;
-            var minValue = datapoints[i].referenceLine ? datapoints[i].y : datapoints[i].minValue;
+            var maxValue = datapoints[i].y;
+            var minValue = datapoints[i].y;
             var difference = maxValue - minValue;
             convertedValue = Math.round(baseScreenY * 50 / 100);
             if (datapoints[i].referenceLine) {
@@ -32025,19 +32050,28 @@ return /******/ (function(modules) { // webpackBootstrap
           } else {
             var _maxValue = datapoints[i].maxValue;
             var _minValue = datapoints[i].minValue;
+            var avgValue = datapoints[i].avgValue;
+
             var distance = _maxValue - _minValue;
-
             var graphScale = range.max - range.min;
-            var availableGraphHeight = baseGraphHeight - padding.top - padding.bottom;
-            var middleValueInGraphScale = distance / 2 + _minValue - range.min;
 
-            var middleValueInScreenPosition = middleValueInGraphScale / graphScale * availableGraphHeight;
-            datapoints[i].screen_y = actualY - middleValueInScreenPosition - padding.bottom; // y positioning is calculated from the bottom (1600 - 280 - 60)
-
+            var availableGraphHeight = baseGraphHeight;
+            if (avgValue) {
+              datapoints[i].calculateAllPoints = true;
+              datapoints[i].screen_yAvg = baseScreenY * ((avgValue - range.min) * 100 / graphScale) / 100;
+              datapoints[i].screen_yMin = baseScreenY * ((_minValue - range.min) * 100 / graphScale) / 100;
+              datapoints[i].screen_yMax = baseScreenY * ((_maxValue - range.min) * 100 / graphScale) / 100;
+            } else {
+              // if avgValue is not defined, it calculates de avg between min and max
+              datapoints[i].calculateAllPoints = false;
+              var middleValueInGraphScale = distance / 2 + _minValue - range.min;
+              var middleValueInScreenPosition = middleValueInGraphScale / graphScale * availableGraphHeight;
+              datapoints[i].screen_y = actualY - middleValueInScreenPosition; // y positioning is calculated from the bottom (1600 - 280 - 60)
+            }
             var arrowAvgSizeScale = distance / graphScale;
             var arrowAvgSize = availableGraphHeight * arrowAvgSizeScale;
             datapoints[i].prop.size = arrowAvgSize <= 0 ? 0 : arrowAvgSize;
-            datapoints[i].prop.baseY = actualY - padding.bottom;
+            datapoints[i].prop.baseY = actualY;
             datapoints[i].prop.baseHeight = availableGraphHeight;
           }
         }
