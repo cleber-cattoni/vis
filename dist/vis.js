@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-08-30
+ * @date    2021-09-02
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -28302,7 +28302,7 @@ return /******/ (function(modules) { // webpackBootstrap
         var factor = this.body.range.end - this.body.range.start;
         var xToPercent = (datapoints[i].x.getTime() - this.body.range.start) * 100 / factor;
         xToPercent = Number.isNaN(xToPercent) ? 0 : xToPercent;
-        datapoints[i].screen_x = (this.props.width - 35) * xToPercent / 100;
+        datapoints[i].screen_x = this.props.width * xToPercent / 100;
       }
 
       datapoints[i].screen_y = datapoints[i].y; //starting point for range calculations
@@ -30616,14 +30616,14 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: '_renderArrowAvgLabel',
       value: function _renderArrowAvgLabel(lineHeight, previousY, orientation, labelClass, group) {
-        if (!group.itemsData || group.itemsData.length === 0) {
-          return; // exit
-        }
-
         var _getGroupScaleValues2 = this._getGroupScaleValues(group, true),
             maxValue = _getGroupScaleValues2.maxValue,
             minValue = _getGroupScaleValues2.minValue,
             avgValue = _getGroupScaleValues2.avgValue;
+
+        if ((!group.itemsData || group.itemsData.length === 0) && (!maxValue || !minValue)) {
+          return; // exit
+        }
 
         if (group.summary && group.group && group.group.intervalScale) {
           this._renderLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue });
@@ -30642,18 +30642,18 @@ return /******/ (function(modules) { // webpackBootstrap
     }, {
       key: '_renderLineLabel',
       value: function _renderLineLabel(lineHeight, previousY, orientation, labelClass, group) {
-        var values = group.itemsData.map(function (item) {
-          return item.y;
-        });
-        if (values.length === 0) {
-          return; // exit
-        }
-
         var _getGroupScaleValues3 = this._getGroupScaleValues(group),
             maxValue = _getGroupScaleValues3.maxValue,
             minValue = _getGroupScaleValues3.minValue,
             avgValue = _getGroupScaleValues3.avgValue,
             referenceLine = _getGroupScaleValues3.referenceLine;
+
+        var values = group.itemsData.map(function (item) {
+          return item.y;
+        });
+        if (values.length === 0 && (!maxValue || !minValue)) {
+          return; // exit
+        }
 
         if (group.summary && group.group && group.group.intervalScale) {
           this._renderLabelWithScale({ lineHeight: lineHeight, orientation: orientation, labelClass: labelClass, group: group, maxValue: maxValue, minValue: minValue, avgValue: avgValue, referenceLine: referenceLine });
@@ -31354,7 +31354,7 @@ return /******/ (function(modules) { // webpackBootstrap
       });
       _this.on('doubletap', function (event) {
         var eventProperties = me.getEventProperties(event);
-        eventProperties.snappedTime = this.body.util.toTime(event.changedPointers[0].offsetX - this.props.center.width);
+        eventProperties.snappedTime = this.body.util.toTime(event.changedPointers[0].offsetX);
         eventProperties.group = (this.pointToRow(event.changedPointers[0].offsetY) || {}).value;
         me.emit('doubleClick', eventProperties);
       });
