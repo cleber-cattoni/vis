@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-09-02
+ * @date    2021-09-03
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -30740,19 +30740,21 @@ return /******/ (function(modules) { // webpackBootstrap
         var maxValue = void 0,
             minValue = void 0;
 
-        if (avgLabel) {
-          maxValue = Math.max.apply(Math, group.itemsData.map(function (item) {
-            return item.referenceLine ? item.y : item.maxValue;
-          }));
-          minValue = Math.min.apply(Math, group.itemsData.map(function (item) {
-            return item.referenceLine ? item.y : item.minValue;
-          }));
-        } else {
-          var itemsData = group.itemsData.map(function (item) {
-            return item.y;
-          });
-          maxValue = Math.max.apply(Math, _toConsumableArray(itemsData));
-          minValue = Math.min.apply(Math, _toConsumableArray(itemsData));
+        if (group.itemsData && group.itemsData.length > 0) {
+          if (avgLabel) {
+            maxValue = Math.max.apply(Math, group.itemsData.map(function (item) {
+              return item.referenceLine ? item.y : item.maxValue;
+            }));
+            minValue = Math.min.apply(Math, group.itemsData.map(function (item) {
+              return item.referenceLine ? item.y : item.minValue;
+            }));
+          } else {
+            var itemsData = group.itemsData.map(function (item) {
+              return item.y;
+            });
+            maxValue = Math.max.apply(Math, _toConsumableArray(itemsData));
+            minValue = Math.min.apply(Math, _toConsumableArray(itemsData));
+          }
         }
 
         if (group && group.group) {
