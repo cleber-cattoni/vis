@@ -5,7 +5,7 @@
  * A dynamic, browser-based visualization library.
  *
  * @version 4.15.4
- * @date    2021-09-03
+ * @date    2021-09-10
  *
  * @license
  * Copyright (C) 2011-2016 Almende B.V, http://almende.com
@@ -20152,7 +20152,7 @@ return /******/ (function(modules) { // webpackBootstrap
     // reposition the panels
     dom.background.style.left = '0';
     dom.background.style.top = '0';
-    dom.backgroundVertical.style.left = props.left.width + props.border.left + 'px';
+    dom.backgroundVertical.style.left = props.left.width + props.border.left - 2 + 'px'; // remove 2 pixels for a better align
     dom.backgroundVertical.style.top = '0';
     dom.backgroundHorizontal.style.left = '0';
     dom.backgroundHorizontal.style.top = props.top.height + 'px';
@@ -25533,18 +25533,10 @@ return /******/ (function(modules) { // webpackBootstrap
     // calculate range and step (step such that we have space for 7 characters per label)
     var start = util.convert(this.body.range.start, 'Number');
     var end = util.convert(this.body.range.end, 'Number');
-    var timeLabelsize = this.body.util.toTime((this.props.minorCharWidth || 10) * this.options.maxMinorChars).valueOf();
+    var gap = this.body.range.options.gap;
+    var diffInHours = (end - start) / (1000 * 60 * 60) / gap;
 
-    // iterval step 1 hour
-    if (this.props.minorCharWidth > 0) {
-      var gap = this.options.gap > 1 ? this.options.gap : 1;
-      timeLabelsize = util.convert(this.body.range.start, 'Number') + 60 * 60 * 1000 * gap;
-    }
-
-    var minimumStep = timeLabelsize - DateUtil.getHiddenDurationBefore(this.options.moment, this.body.hiddenDates, this.body.range, timeLabelsize);
-    minimumStep -= this.body.util.toTime(0).valueOf();
-
-    var step = new TimeStep(new Date(start), new Date(end), minimumStep, this.body.hiddenDates);
+    var step = new TimeStep(new Date(start), new Date(end));
     step.setMoment(this.options.moment);
     if (this.options.format) {
       step.setFormat(this.options.format);
@@ -25566,12 +25558,10 @@ return /******/ (function(modules) { // webpackBootstrap
     dom.minorTexts = [];
 
     var current;
-    var next;
     var x;
     var xNext;
-    var isMajor, nextIsMajor;
-    var width = 0,
-        prevWidth;
+    var isMajor;
+    var width = 0;
     var line;
     var labelMinor;
     var xFirstMajorLabel = undefined;
@@ -25579,38 +25569,27 @@ return /******/ (function(modules) { // webpackBootstrap
     var MAX = 1000;
     var className;
 
-    step.start();
-    next = step.getCurrent();
-    xNext = this.body.util.toScreen(next);
-    while (step.hasNext() && count < MAX) {
-      count++;
-
+    // Calculation of the possibility of the vertical line taking into account the size of the header
+    var elementHeaderWidthItem = document.querySelectorAll('.tl-setting-bar__item');
+    var elementHeaderWidth = document.querySelector('.tl-setting-bar');
+    current = start;
+    xNext = this.body.util.toScreen(current);
+    for (var next = 0; next < diffInHours; next++) {
       isMajor = step.isMajor();
       className = step.getClassName();
       labelMinor = step.getLabelMinor();
 
-      current = next;
       x = xNext;
-
-      step.next();
-      next = step.getCurrent();
-      nextIsMajor = step.isMajor();
-      xNext = this.body.util.toScreen(next);
-
-      prevWidth = width;
+      current = start + next * 60 * 60 * 1000;
+      xNext = this.body.util.toScreen(current);
       width = xNext - x;
-      var showMinorGrid = width >= prevWidth * 0.4; // prevent displaying of the 31th of the month on a scale of 5 days
 
-      // Calculation of the possibility of the vertical line taking into account the size of the header
-      var elementHeaderWidthItem = document.querySelectorAll('.tl-setting-bar__item');
-      var elementHeaderWidth = document.querySelector('.tl-setting-bar');
       if (elementHeaderWidthItem && elementHeaderWidth && elementHeaderWidth.offsetWidth) {
         var widthElement = parseFloat(elementHeaderWidth.offsetWidth / elementHeaderWidthItem.length).toFixed(2);
-        var _gap = this.options.gap >= 1 ? this.options.gap : 1 / this.options.gap;
-        width = _gap * widthElement;
+        width = widthElement;
       }
 
-      if (this.options.showMinorLabels && showMinorGrid) {
+      if (this.options.showMinorLabels) {
         var label = this._repaintMinorText(x, labelMinor, orientation, className);
         label.style.width = width + 'px'; // set width to prevent overflow
       }
@@ -25624,15 +25603,7 @@ return /******/ (function(modules) { // webpackBootstrap
         }
         line = this._repaintMajorLine(x, width, orientation, className);
       } else if (this.options['showMinorLines']) {
-        // minor line
-        if (showMinorGrid) {
-          line = this._repaintMinorLine(x, width, orientation, className, count);
-        } else {
-          if (line) {
-            // adjust the width of the previous grid
-            line.style.width = parseInt(line.style.width) + width + 'px';
-          }
-        }
+        line = this._repaintMinorLine(x, width, orientation, className, next);
       }
     }
 
@@ -25753,7 +25724,7 @@ return /******/ (function(modules) { // webpackBootstrap
       line.style.top = this.body.domProps.top.height + 'px';
     }
     line.style.height = props.minorLineHeight + 'px';
-    line.style.left = indexColumn == 1 ? '-' + width + 'px' : (indexColumn - 1) * width - width + 'px';
+    line.style.left = indexColumn * width - width + 'px';
     line.style.width = width + 'px';
 
     line.className = 'vis-grid vis-vertical vis-minor ' + className;
